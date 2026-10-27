@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login · Tender Ops</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .login-page {
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+            background: #0b1720;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .login-page::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(4, 19, 28, .88) 0%, rgba(4, 19, 28, .55) 43%, rgba(4, 19, 28, .16) 100%),
+                linear-gradient(0deg, rgba(2, 10, 16, .38), rgba(2, 10, 16, .04));
+            z-index: 1;
+        }
+
+        .login-background {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            filter: saturate(.92) contrast(1.02);
+            transform: scale(1.015);
+        }
+
+        .login-shell {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            width: min(1240px, 100%);
+            margin: 0 auto;
+            padding: 44px 48px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(390px, .85fr);
+            align-items: center;
+            gap: 70px;
+        }
+
+        .login-brand {
+            color: white;
+            max-width: 620px;
+            align-self: center;
+            padding: 18px 0;
+        }
+
+        .brand-mark {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            letter-spacing: .09em;
+            font-size: 1.05rem;
+        }
+
+        .brand-mark-icon {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, .42);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, .12);
+            backdrop-filter: blur(8px);
+        }
+
+        .login-brand h1 {
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(3.4rem, 6.1vw, 6.25rem);
+            line-height: .9;
+            letter-spacing: -.055em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .brand-rule {
+            width: 76px;
+            height: 4px;
+            margin: 30px 0 18px;
+            border-radius: 999px;
+            background: #ef3125;
+        }
+
+        .login-brand .lead {
+            max-width: 520px;
+            margin: 0;
+            font-size: clamp(1rem, 1.6vw, 1.25rem);
+            line-height: 1.55;
+            color: rgba(255, 255, 255, .9);
+        }
+
+        .login-brand .caption {
+            margin-top: 20px;
+            font-size: .9rem;
+            color: rgba(255, 255, 255, .68);
+        }
+
+        .login-card-wrap {
+            width: 100%;
+            max-width: 470px;
+            justify-self: end;
+        }
+
+        .login-card {
+            border: 1px solid rgba(255, 255, 255, .34);
+            background: rgba(245, 247, 248, .72);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-radius: 28px;
+            padding: 38px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .32), inset 0 1px 0 rgba(255, 255, 255, .45);
+        }
+
+        .login-card-header {
+            margin-bottom: 28px;
+        }
+
+        .login-card-kicker {
+            color: #34414a;
+            font-size: .78rem;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            margin-bottom: 7px;
+        }
+
+        .login-card-header h2 {
+            margin: 0;
+            color: #101820;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.9rem;
+            line-height: 1.1;
+            font-weight: 700;
+        }
+
+        .login-card-header p {
+            margin: 9px 0 0;
+            color: #58636b;
+            font-size: .92rem;
+        }
+
+        .login-field {
+            margin-bottom: 18px;
+        }
+
+        .login-field label {
+            display: block;
+            margin-bottom: 8px;
+            color: #26323a;
+            font-size: .87rem;
+            font-weight: 700;
+        }
+
+        .login-input-wrap {
+            position: relative;
+        }
+
+        .login-input-wrap>svg {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #75818a;
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        .login-input {
+            width: 100%;
+            height: 50px;
+            box-sizing: border-box;
+            padding: 0 46px 0 46px;
+            border: 1px solid rgba(53, 66, 75, .18);
+            border-radius: 11px;
+            background: rgba(255, 255, 255, .88);
+            color: #17212a;
+            outline: none;
+            font-size: .94rem;
+            transition: border-color .2s, box-shadow .2s, background .2s;
+        }
+
+        .login-input::placeholder {
+            color: #9aa2a8;
+        }
+
+        .login-input:focus {
+            background: white;
+            border-color: #ef3125;
+            box-shadow: 0 0 0 4px rgba(239, 49, 37, .11);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 0;
+            background: transparent;
+            color: #77828a;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .forgot-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: -2px;
+            margin-bottom: 22px;
+        }
+
+        .forgot-link {
+            color: #343f46;
+            font-size: .85rem;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .forgot-link:hover {
+            color: #ef3125;
+        }
+
+        .login-submit {
+            width: 100%;
+            height: 50px;
+            border: 0;
+            border-radius: 11px;
+            background: #ef3125;
+            color: white;
+            font-weight: 700;
+            font-size: .95rem;
+            letter-spacing: .01em;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(239, 49, 37, .25);
+            transition: transform .2s, background .2s, box-shadow .2s;
+        }
+
+        .login-submit:hover {
+            background: #d9281e;
+            transform: translateY(-1px);
+            box-shadow: 0 13px 28px rgba(239, 49, 37, .3);
+        }
+
+        .login-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 23px;
+            color: #657079;
+            font-size: .76rem;
+        }
+
+        .secure-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 900px) {
+            .login-shell {
+                grid-template-columns: 1fr;
+                gap: 30px;
+                padding: 34px 24px;
+                justify-items: center;
+            }
+
+            .login-brand {
+                text-align: center;
+                max-width: 700px;
+            }
+
+            .brand-rule {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .login-brand .lead,
+            .login-brand .caption {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .login-brand h1 {
+                font-size: clamp(3rem, 11vw, 5.3rem);
+            }
+
+            .login-card-wrap {
+                justify-self: center;
+            }
+
+            .login-page::before {
+                background:
+                    linear-gradient(180deg, rgba(4, 19, 28, .72) 0%, rgba(4, 19, 28, .25) 42%, rgba(4, 19, 28, .76) 100%);
+            }
+        }
+
+        @media (max-width: 520px) {
+            .login-shell {
+                padding: 26px 16px;
+            }
+
+            .login-brand {
+                padding-top: 4px;
+            }
+
+            .login-brand h1 {
+                font-size: 2.8rem;
+            }
+
+            .login-brand .lead {
+                font-size: .92rem;
+            }
+
+            .login-card {
+                padding: 25px 20px;
+                border-radius: 22px;
+            }
+
+            .login-footer {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+    <main class="login-page">
+        <img class="login-background" src="{{ url_for('static', filename='image/Background_Pertamina.jpg') }}"
+            alt="Area operasi Pertamina">
+
+        <div class="login-shell">
+            <section class="login-brand" aria-label="Identitas aplikasi">
+                <div class="brand-mark">
+                    <span class="brand-mark-icon"><i data-lucide="building-2" class="w-5 h-5"></i></span>
+                    <span>TENDER OPS</span>
+                </div>
+
+                <h1>MONITORING<br>KONTRAK</h1>
+                <div class="brand-rule"></div>
+                <p class="lead">Contract Control Center untuk membantu memantau proses, tahapan, dan progres kontrak
+                    tender secara terpusat.</p>
+                <p class="caption">Sistem Monitoring Kontrak · Tender Operations</p>
+            </section>
+
+            <section class="login-card-wrap">
+                <div class="login-card">
+                    <div class="login-card-header">
+                        <div class="login-card-kicker">Secure Access</div>
+                        <h2>Selamat Datang</h2>
+                        <p>Silakan masuk untuk mengakses Monitoring Kontrak.</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('login') }}" novalidate>
+                        <div class="login-field">
+                            <label for="username">Username</label>
+                            <div class="login-input-wrap">
+                                <i data-lucide="user"></i>
+                                <input id="username" name="username" type="text" autocomplete="username" required
+                                    autofocus class="login-input" placeholder="Masukkan username">
+                            </div>
+                        </div>
+
+                        <div class="login-field">
+                            <label for="password">Password</label>
+                            <div class="login-input-wrap">
+                                <i data-lucide="lock-keyhole"></i>
+                                <input id="password" name="password" type="password" autocomplete="current-password"
+                                    required class="login-input" placeholder="Masukkan password">
+                                <button type="button" id="togglePassword" class="password-toggle"
+                                    aria-label="Tampilkan password">
+                                    <i data-lucide="eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="forgot-row">
+                            <a href="{{ url_for('forgot_password') }}" class="forgot-link">Lupa Password?</a>
+                        </div>
+
+                        <button type="submit" class="login-submit">MASUK</button>
+                    </form>
+
+                    <div class="login-footer">
+                        <span>Monitoring Kontrak Tender</span>
+                        <span class="secure-badge"><i data-lucide="shield-check" class="w-4 h-4"></i> Akses
+                            Terproteksi</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div id="loginNotification"
+        class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-900/30 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
+            {% for category, message in messages %}
+            <div class="flex items-start gap-3">
+                <div
+                    class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 {% if category == 'error' %}bg-red-100 text-red-600{% elif category == 'warning' %}bg-amber-100 text-amber-600{% else %}bg-emerald-100 text-emerald-600{% endif %}">
+                    <i data-lucide="{% if category == 'error' %}circle-alert{% elif category == 'warning' %}triangle-alert{% else %}circle-check{% endif %}"
+                        class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1">
+                    <h2 class="font-bold text-slate-900">{% if category == 'error' %}Login gagal{% elif category ==
+                        'warning' %}Perhatian{% else %}Berhasil{% endif %}</h2>
+                    <p class="text-sm text-slate-500 mt-1">{{ message }}</p>
+                </div>
+            </div>
+            {% endfor %}
+            <button type="button" onclick="document.getElementById('loginNotification').remove()"
+                class="w-full mt-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold transition">Tutup</button>
+        </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <script>
+        lucide.createIcons();
+        const passwordInput = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        togglePassword.addEventListener('click', () => {
+            const showing = passwordInput.type === 'text';
+            passwordInput.type = showing ? 'password' : 'text';
+            togglePassword.innerHTML = `<i data-lucide="${showing ? 'eye' : 'eye-off'}"></i>`;
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>

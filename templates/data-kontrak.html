@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Kontrak | Monitoring Kontrak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background: #f4f6f8;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+    <style>
+        body {
+            font-family: "DM Sans", sans-serif;
+            background: #f8fafc;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-radius: 10px;
+            color: #94a3b8;
+            transition: .2s;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: #1e293b;
+            color: #ffffff;
+        }
+
+        .sidebar-link.active {
+            box-shadow: inset 3px 0 #38bdf8;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body class="text-slate-800">
+    <div class="min-h-screen">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="brand" style="background: transparent;"><img
+                    src="/static/image/Desain_tanpa_judul__2_-removebg-preview.png" alt="logo-pertamina"
+                    class="brand-mark">
+                <p>Pertamina</p>
+            </div>
+            <div class="workspace-label">WORKSPACE</div>
+
+            <nav>
+                {% if current_user.role == 'USER' %}
+                <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+                    href="{{ url_for('dashboard') }}">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                    href="{{ url_for('flowchart') }}">
+                    <i data-lucide="chart-no-axes-combined"></i>
+                    <span>Flowchart</span>
+                </a>
+                {% endif %}
+
+                {% if current_user.role == 'PIC' %}
+                <a href="{{ url_for('data_kontrak') }}"
+                    class="nav-link {% if request.endpoint == 'data_kontrak' %}active{% endif %}">
+                    <i data-lucide="files"></i>
+                    <span>Data Kontrak</span>
+                </a>
+
+                <a class="nav-link {% if request.endpoint == 'tambah_kontrak' %}active{% endif %}"
+                    href="{{ url_for('tambah_kontrak') }}">
+                    <i data-lucide="file-text"></i>
+                    <span>Form Input Kontrak</span>
+                </a>
+
+                <a class="nav-link {% if request.endpoint == 'checklist_kontrak' %}active{% endif %}"
+                    href="{{ url_for('checklist_kontrak') }}">
+                    <i data-lucide="calendar-days"></i>
+                    <span>Checklist Kontrak</span>
+                </a>
+
+                <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                    href="{{ url_for('flowchart') }}">
+                    <i data-lucide="chart-no-axes-combined"></i>
+                    <span>Flowchart</span>
+                </a>
+                {% endif %}
+
+                <!-- Khusus Admin -->
+                {% if current_user.role == 'ADMIN' %}
+                <a class="nav-link {% if request.endpoint == 'index_pengguna' %}active{% endif %}"
+                    href=" {{ url_for('index_pengguna') }}">
+                    <i data-lucide="chart-no-axes-combined"></i>
+                    <span>Manajemen Pengguna</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                    href="{{ url_for('flowchart') }}">
+                    <i data-lucide="chart-no-axes-combined"></i>
+                    <span>Flowchart</span>
+                </a>
+                {% endif %}
+            </nav>
+            <div class="sidebar-bottom">
+                <form action="{{ url_for('logout') }}" method="POST">
+                    <button type="button" id="logoutButton" class="nav-link logout-link">
+                        <i data-lucide="log-out"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+                <div class="profile">
+                    <div class="avatar">{{ (current_user.nama_lengkap or current_user.username or 'U')[0]|upper }}</div>
+                    <div><strong>{{ current_user.nama_lengkap or current_user.username }}</strong><small>{{
+                            current_user.role }}</small></div><i data-lucide="more-horizontal"></i>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="ml-64 min-h-screen">
+            <header class="topbar">
+                <div class="topbar-title">
+                    <h1>Data Kontrak</h1>
+                    <p>Contract Control Center</p>
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="date-chip">
+                        <i data-lucide="calendar-days" aria-hidden="true"></i>
+                        <time id="current-date"></time>
+                    </div>
+                    <div class="relative" x-data="{ bukaNotifikasi: false }">
+
+                        <button type="button" @click="bukaNotifikasi = !bukaNotifikasi"
+                            class="relative rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 transition hover:bg-slate-50"
+                            aria-label="Notifikasi deadline" :aria-expanded="bukaNotifikasi.toString()">
+                            <i data-lucide="bell" class="h-5 w-5"></i>
+
+                            {% if jumlah_notifikasi > 0 %}
+                            <span
+                                class="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white">
+                                {{ jumlah_notifikasi }}
+                            </span>
+                            {% endif %}
+                        </button>
+
+                        <div x-cloak x-show="bukaNotifikasi" @click.outside="bukaNotifikasi = false" x-transition
+                            class="absolute right-0 z-50 mt-3 w-80 max-w-[90vw] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                            <div class="border-b border-slate-100 p-4">
+                                <h3 class="font-semibold text-slate-800">
+                                    Deadline Persyaratan
+                                </h3>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    Persyaratan yang perlu ditindaklanjuti
+                                </p>
+                            </div>
+
+                            <div class="max-h-96 overflow-y-auto">
+                                {% for notif in notifikasi_deadline %}
+                                <div class="border-b border-slate-100 p-4 last:border-0">
+                                    <div class="flex items-start gap-3">
+
+                                        <span class="mt-0.5 rounded-lg p-2
+                        {% if notif.sisa_hari < 0 %}
+                            bg-red-50 text-red-600
+                        {% elif notif.sisa_hari == 0 %}
+                            bg-orange-50 text-orange-600
+                        {% else %}
+                            bg-amber-50 text-amber-600
+                        {% endif %}
+                    ">
+                                            <i data-lucide="calendar-clock" class="h-4 w-4"></i>
+                                        </span>
+
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-sm font-semibold text-slate-800">
+                                                {{ notif.judul_kontrak }}
+                                            </p>
+
+                                            <p class="mt-1 text-xs text-slate-500">
+                                                Deadline:
+                                                {{ notif.deadline.strftime('%d-%m-%Y') }}
+                                            </p>
+
+                                            <p class="mt-2 text-xs font-medium
+                            {% if notif.sisa_hari < 0 %}
+                                text-red-600
+                            {% elif notif.sisa_hari == 0 %}
+                                text-orange-600
+                            {% else %}
+                                text-amber-600
+                            {% endif %}
+                        ">
+                                                {{ notif.status }}
+                                            </p>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="p-6 text-center">
+                                    <i data-lucide="check-circle-2" class="mx-auto h-8 w-8 text-emerald-500"></i>
+
+                                    <p class="mt-2 text-sm font-medium text-slate-700">
+                                        Tidak ada deadline mendesak
+                                    </p>
+
+                                    <p class="mt-1 text-xs text-slate-500">
+                                        Semua persyaratan aman untuk saat ini.
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </header>
+
+            <div class="space-y-6 p-8">
+
+                <!-- PAGE TITLE -->
+                <section class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                    <div>
+                        <p class="mb-2 text-xs font-bold uppercase tracking-[.18em] text-sky-600">
+                            Contract Management
+                        </p>
+                        <h1 class="text-3xl font-bold tracking-tight text-slate-900">
+                            Daftar Kontrak
+                        </h1>
+                        <p class="mt-2 text-sm text-slate-500">
+                            {% if current_user.role|upper == 'PIC' %}
+                            Pantau kontrak yang menjadi tanggung jawab Anda.
+                            {% else %}
+                            Lihat dan pantau data kontrak dalam sistem.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    {% if current_user.role|upper == 'PIC' %}
+                    <a href="{{ url_for('tambah_kontrak') }}"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700">
+                        <i data-lucide="plus" class="h-4 w-4"></i>
+                        Tambah Kontrak
+                    </a>
+                    {% endif %}
+                </section>
+
+                <!-- SUMMARY -->
+
+                <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+                    <!-- Total Kontrak -->
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-slate-500">Total Kontrak</p>
+                            <span class="rounded-xl bg-sky-50 p-2 text-sky-600">
+                                <i data-lucide="files" class="h-5 w-5"></i>
+                            </span>
+                        </div>
+                        <p class="mt-4 text-3xl font-bold">
+                            {{ kpi.total_kontrak }}
+                        </p>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Kontrak yang dapat Anda lihat
+                        </p>
+                    </div>
+
+                    <!-- Persiapan Dokumen -->
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-slate-500">Persiapan Dokumen</p>
+                            <span class="rounded-xl bg-amber-50 p-2 text-amber-600">
+                                <i data-lucide="file-text" class="h-5 w-5"></i>
+                            </span>
+                        </div>
+                        <p class="mt-4 text-3xl font-bold">
+                            {{ kpi.persiapan_dokumen }}
+                        </p>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Kontrak pada tahap persiapan
+                        </p>
+                    </div>
+
+                    <!-- Dalam Proses -->
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-slate-500">Dalam Proses</p>
+                            <span class="rounded-xl bg-blue-50 p-2 text-blue-600">
+                                <i data-lucide="git-pull-request" class="h-5 w-5"></i>
+                            </span>
+                        </div>
+                        <p class="mt-4 text-3xl font-bold">
+                            {{ kpi.dalam_proses }}
+                        </p>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Routing atau Submit SmartGEP
+                        </p>
+                    </div>
+
+                    <!-- Siap Proses Tender -->
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-slate-500">Siap Proses Tender</p>
+                            <span class="rounded-xl bg-emerald-50 p-2 text-emerald-600">
+                                <i data-lucide="check-circle-2" class="h-5 w-5"></i>
+                            </span>
+                        </div>
+                        <p class="mt-4 text-3xl font-bold">
+                            {{ kpi.siap_proses_tender }}
+                        </p>
+                        <p class="mt-1 text-xs text-slate-400">
+                            Kontrak siap diproses ke tahap tender
+                        </p>
+                    </div>
+
+                </section>
+
+
+                <!-- TABLE -->
+                <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="border-b border-slate-100 p-5 sm:p-6">
+                        <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+                            <div>
+                                <h2 class="font-bold text-slate-900">Semua Data Kontrak</h2>
+                                <p class="mt-1 text-sm text-slate-500">
+                                    Cari kontrak atau gunakan filter status.
+                                </p>
+                            </div>
+
+                            <div class="flex flex-col gap-3 sm:flex-row">
+                                <div class="relative">
+                                    <i data-lucide="search"
+                                        class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+                                    <input id="searchInput" type="search" placeholder="Cari nama kontrak..."
+                                        class="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-sky-500 focus:ring-4 focus:ring-sky-50 sm:w-64">
+                                </div>
+
+                                <select id="statusFilter"
+                                    class="rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-sky-500">
+                                    <option value="">Semua Status</option>
+                                    <option value="draft">Draft</option>
+                                    <option value="aktif">Aktif</option>
+                                    <option value="menunggu">Menunggu</option>
+                                    <option value="persiapan dokumen">Persiapan Dokumen</option>
+                                    <option value="routing & persetujuan">Routing &amp; Persetujuan</option>
+                                    <option value="submit smartgep">Submit SmartGEP</option>
+                                    <option value="siap proses tender">Siap Proses Tender</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full min-w-[1000px] text-left text-sm">
+                            <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Informasi Kontrak</th>
+                                    <th class="px-6 py-4 font-semibold">PIC</th>
+                                    <th class="px-6 py-4 font-semibold">Tahun WP&B</th>
+                                    <th class="px-6 py-4 font-semibold">Nilai Kontrak</th>
+                                    <th class="px-6 py-4 font-semibold">Status</th>
+                                    <th class="px-6 py-4 font-semibold">Progres</th>
+                                    <th class="px-6 py-4 font-semibold">Aksi</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="contractTable" class="divide-y divide-slate-100">
+                                {% for kontrak in kontrak_data %}
+                                <tr class="contract-row transition hover:bg-slate-50/80"
+                                    data-name="{{ kontrak.judul_kontrak|default('', true)|lower }}"
+                                    data-status="{{ kontrak.status|default('', true)|lower }}">
+
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-start gap-3">
+                                            <div
+                                                class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-700">
+                                                <i data-lucide="file-text" class="h-5 w-5"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-slate-900">
+                                                    {{ kontrak.judul_kontrak or 'Tanpa judul' }}
+                                                </p>
+                                                <p class="mt-1 text-xs text-slate-500">
+                                                    {{ kontrak.lokasi_kontrak or 'Lokasi belum diisi' }}
+                                                </p>
+                                                <p class="mt-1 font-mono text-[11px] text-slate-400">
+                                                    ID: {{ kontrak.id }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
+                                                {{ (pic_names.get(kontrak.pic, 'Belum ditentukan'))[0]|upper }}
+                                            </div>
+                                            <span class="text-slate-700">
+                                                {{ pic_names.get(kontrak.pic, 'Belum ditentukan') }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <td class="px-6 py-4">
+                                        <span
+                                            class="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700">
+                                            {{ kontrak.tahun_wpb or '-' }}
+                                        </span>
+                                    </td>
+
+                                    <td class="px-6 py-4 font-semibold text-slate-700">
+                                        <span class="contract-value"
+                                            data-value="{{ kontrak.nilai or kontrak.anggaran or 0 }}">
+                                            {{ kontrak.nilai or kontrak.anggaran or 0 }}
+                                        </span>
+                                    </td>
+
+                                    <td class="px-6 py-4">
+                                        {% set status = (kontrak.status or 'Draft')|lower %}
+                                        {% if status == 'aktif' %}
+                                        <span
+                                            class="status-badge inline-flex rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700">
+                                            Aktif
+                                        </span>
+                                        {% elif 'menunggu' in status or 'routing' in status %}
+                                        <span
+                                            class="status-badge inline-flex rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700">
+                                            {{ kontrak.status }}
+                                        </span>
+                                        {% elif 'siap' in status %}
+                                        <span
+                                            class="status-badge inline-flex rounded-full bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700">
+                                            {{ kontrak.status }}
+                                        </span>
+                                        {% else %}
+                                        <span
+                                            class="status-badge inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+                                            {{ kontrak.status or 'Draft' }}
+                                        </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="px-6 py-4">
+                                        <div class="mb-2 flex items-center justify-between gap-3">
+                                            <span class="text-xs text-slate-500">Checklist</span>
+                                            <span class="text-xs font-bold text-slate-700">
+                                                {{ progress_data.get(kontrak.id, 0) }}%
+                                            </span>
+                                        </div>
+                                        <div class="h-2 w-32 overflow-hidden rounded-full bg-slate-100">
+                                            <div class="h-full rounded-full bg-sky-500 transition-all"
+                                                style="width: {{ progress_data.get(kontrak.id, 0) }}%">
+                                            </div>
+                                        </div>
+                                    </td>
+
+
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-2">
+                                            {% if current_user.role|upper == 'PIC' %}
+                                            <button type="button"
+                                                class="btn-edit rounded-lg p-2 text-slate-500 hover:bg-sky-50 hover:text-sky-700"
+                                                data-id="{{ kontrak.id }}"
+                                                data-judul="{{ kontrak.judul_kontrak or '' }}"
+                                                data-lokasi="{{ kontrak.lokasi_kontrak or '' }}"
+                                                data-anggaran="{{ kontrak.anggaran or 0 }}"
+                                                data-nilai="{{ kontrak.nilai or 0 }}"
+                                                data-wpb="{{ kontrak.tahun_wpb or '' }}"
+                                                data-target="{{ kontrak.target_realisasi.strftime('%Y-%m-%d') if kontrak.target_realisasi else '' }}"
+                                                data-pic="{{ kontrak.pic or '' }}"
+                                                data-status="{{ kontrak.status or '' }}" title="Edit kontrak">
+                                                <i data-lucide="pencil" class="h-4 w-4"></i>
+                                            </button>
+
+                                            <button type="button"
+                                                class="btn-delete rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600"
+                                                data-id="{{ kontrak.id }}" title="Hapus kontrak">
+                                                <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                            </button>
+                                            {% else %}
+                                            <span class="text-xs text-slate-400">Hanya lihat</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="px-6 py-16 text-center">
+                                        <div
+                                            class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                                            <i data-lucide="folder-open" class="h-7 w-7"></i>
+                                        </div>
+                                        <p class="font-semibold text-slate-700">Belum ada data kontrak</p>
+                                        <p class="mt-1 text-sm text-slate-400">
+                                            Kontrak yang ditugaskan kepada Anda akan tampil di sini.
+                                        </p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+
+                                <tr id="noResults" class="hidden">
+                                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                                        Tidak ada kontrak yang sesuai dengan pencarian atau filter.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div
+                        class="flex flex-col justify-between gap-2 border-t border-slate-100 px-6 py-4 text-xs text-slate-500 sm:flex-row">
+                        <p id="resultCount">Menampilkan {{ kontrak_data|length }} kontrak</p>
+                        <p>Monitoring Kontrak · Zona 1</p>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Overlay -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <div>
+                    <h2 class="text-lg font-semibold">
+                        Edit Kontrak
+                    </h2>
+                    <p class="text-sm text-slate-500">
+                        Perbarui informasi kontrak
+                    </p>
+                </div>
+                <button type="button" id="closeEditModal" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <!-- Form -->
+            <form id="editContractForm">
+                <input type="hidden" id="editId">
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Judul -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-1">
+                            Judul Kontrak
+                        </label>
+                        <input type="text" id="editJudul" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Lokasi -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Lokasi Kontrak
+                        </label>
+                        <input type="text" id="editLokasi" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Anggaran -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Anggaran
+                        </label>
+                        <input type="number" id="editAnggaran" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Nilai OE -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Nilai OE
+                        </label>
+                        <input type="number" id="editNilai" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Tahun WPB -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Tahun WPB
+                        </label>
+                        <input type="number" id="editTahunWpb" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Target Realisasi -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Target Realisasi
+                        </label>
+                        <input type="date" id="editTargetRealisasi" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Status -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-1">
+                            Status
+                        </label>
+                        <select id="editStatus" class="w-full border rounded-lg px-3 py-2" required>
+                            <option value="Persiapan Dokumen">
+                                Persiapan Dokumen
+                            </option>
+                            <option value="Routing & Persetujuan">
+                                Routing & Persetujuan
+                            </option>
+                            <option value="Submit SmartGEP">
+                                Submit SmartGEP
+                            </option>
+                            <option value="Siap Proses Tender">
+                                Siap Proses Tender
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Footer -->
+                <div class="flex justify-end gap-3 px-6 py-4 border-t">
+                    <button type="button" id="cancelEdit" class="px-4 py-2 border rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-[9999] hidden
+           min-w-[320px] max-w-sm
+           rounded-xl border bg-white
+           shadow-lg px-4 py-3
+           transition-all duration-300">
+
+        <div class="flex items-start gap-3">
+
+            <div id="toastIcon" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <p id="toastTitle" class="text-sm font-semibold text-slate-800">
+                </p>
+
+                <p id="toastMessage" class="mt-0.5 text-xs text-slate-500">
+                </p>
+            </div>
+
+            <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-slate-600">
+
+                <i data-lucide="x" class="w-4 h-4"></i>
+
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal"
+        class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+
+        <div class="w-full max-w-md mx-4 rounded-2xl bg-white shadow-2xl">
+
+            <div class="p-6">
+
+                <div class="flex items-start gap-4">
+
+                    <!-- Icon -->
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center
+                            rounded-full bg-red-100 text-red-600">
+
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+
+                    </div>
+
+                    <!-- Text -->
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">
+                            Hapus Kontrak?
+                        </h3>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            Apakah Anda yakin ingin menghapus kontrak ini?
+                            Data yang dihapus tidak dapat dikembalikan.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Button -->
+            <div class="flex justify-end gap-3 border-t border-slate-100
+                    bg-slate-50 px-6 py-4 rounded-b-2xl">
+
+                <button type="button" id="cancelDelete" class="rounded-lg border border-slate-200 bg-white
+                       px-4 py-2 text-sm font-semibold text-slate-600
+                       hover:bg-slate-100 transition">
+
+                    Batal
+
+                </button>
+
+                <button type="button" id="confirmDelete" class="rounded-lg bg-red-600 px-4 py-2
+                       text-sm font-semibold text-white
+                       hover:bg-red-700 transition">
+
+                    Hapus
+
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= LOGOUT CONFIRMATION ================= -->
+    <div id="logoutModal"
+        class="hidden fixed inset-0 z-[100] items-center justify-center p-6 bg-slate-950/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
+            <div class="flex items-start gap-3">
+                <div
+                    class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-900">Konfirmasi Logout</h2>
+                    <p class="text-sm text-slate-500 mt-1">Apakah Anda ingin logout?</p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" id="cancelLogout"
+                    class="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition">Tidak</button>
+
+                <form action="{{ url_for('logout') }}" method="POST" class="flex-1">
+                    <button type="submit" id="confirmLogout"
+                        class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold text-center transition">
+                        Ya
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="{{ url_for('static', filename='update-status.js') }}"></script>
+    <script src="{{ url_for('static', filename='search-filter.js') }}"></script>
+    <script src="{{ url_for('static', filename='logout.js') }}"></script>
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const editModal = document.getElementById("editModal");
+            const deleteModal = document.getElementById("deleteModal");
+            const editForm = document.getElementById("editContractForm");
+
+            let deleteContractId = null;
+
+            // Buka modal edit
+            document.addEventListener("click", function (event) {
+                const button = event.target.closest(".btn-edit");
+
+                if (!button) return;
+
+                document.getElementById("editId").value = button.dataset.id;
+                document.getElementById("editJudul").value = button.dataset.judul || "";
+                document.getElementById("editLokasi").value = button.dataset.lokasi || "";
+                document.getElementById("editAnggaran").value = button.dataset.anggaran || 0;
+                document.getElementById("editNilai").value = button.dataset.nilai || 0;
+                document.getElementById("editTahunWpb").value = button.dataset.wpb || "";
+                document.getElementById("editTargetRealisasi").value = button.dataset.target || "";
+                // document.getElementById("editPic").value = button.dataset.pic || "";
+                document.getElementById("editStatus").value = button.dataset.status || "";
+
+                editModal.classList.remove("hidden");
+                editModal.classList.add("flex");
+
+                if (window.lucide) window.lucide.createIcons();
+            });
+
+            // Tutup modal edit
+            function closeEditModal() {
+                editModal.classList.add("hidden");
+                editModal.classList.remove("flex");
+            }
+
+            document.getElementById("closeEditModal")
+                .addEventListener("click", closeEditModal);
+
+            document.getElementById("cancelEdit")
+                .addEventListener("click", closeEditModal);
+
+            // Buka modal hapus
+            document.addEventListener("click", function (event) {
+                const button = event.target.closest(".btn-delete");
+
+                if (!button) return;
+
+                deleteContractId = button.dataset.id;
+
+                deleteModal.classList.remove("hidden");
+                deleteModal.classList.add("flex");
+
+                if (window.lucide) window.lucide.createIcons();
+            });
+
+            // Tutup modal hapus
+            document.getElementById("cancelDelete")
+                .addEventListener("click", function () {
+                    deleteContractId = null;
+                    deleteModal.classList.add("hidden");
+                    deleteModal.classList.remove("flex");
+                });
+
+            // Simpan perubahan
+            editForm.addEventListener("submit", async function (event) {
+                event.preventDefault();
+
+                const id = document.getElementById("editId").value;
+
+                const data = {
+                    judul_kontrak: document.getElementById("editJudul").value.trim(),
+                    lokasi_kontrak: document.getElementById("editLokasi").value.trim(),
+                    anggaran: document.getElementById("editAnggaran").value,
+                    nilai: document.getElementById("editNilai").value,
+                    tahun_wpb: document.getElementById("editTahunWpb").value,
+                    target_realisasi: document.getElementById("editTargetRealisasi").value,
+                    pic: document.getElementById("editPic").value,
+                    status: document.getElementById("editStatus").value
+                };
+
+                try {
+                    const response = await fetch(`/api/kontrak/${id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || "Gagal memperbarui kontrak.");
+                    }
+
+                    closeEditModal();
+                    window.location.reload();
+                } catch (error) {
+                    console.error("Update kontrak:", error);
+                    alert(error.message || "Terjadi kesalahan saat memperbarui kontrak.");
+                }
+            });
+
+            // Konfirmasi hapus
+            document.getElementById("confirmDelete")
+                .addEventListener("click", async function () {
+                    if (!deleteContractId) return;
+
+                    const button = this;
+                    button.disabled = true;
+
+                    try {
+                        const response = await fetch(
+                            `/api/kontrak/${deleteContractId}`,
+                            { method: "DELETE" }
+                        );
+
+                        const result = await response.json();
+
+                        if (!response.ok || !result.success) {
+                            throw new Error(result.message || "Gagal menghapus kontrak.");
+                        }
+
+                        deleteModal.classList.add("hidden");
+                        deleteModal.classList.remove("flex");
+                        deleteContractId = null;
+
+                        window.location.reload();
+                    } catch (error) {
+                        console.error("Hapus kontrak:", error);
+                        alert(error.message || "Terjadi kesalahan saat menghapus kontrak.");
+                    } finally {
+                        button.disabled = false;
+                    }
+                });
+
+            // Klik area gelap untuk menutup modal
+            editModal.addEventListener("click", function (event) {
+                if (event.target === editModal) closeEditModal();
+            });
+
+            deleteModal.addEventListener("click", function (event) {
+                if (event.target === deleteModal) {
+                    deleteContractId = null;
+                    deleteModal.classList.add("hidden");
+                    deleteModal.classList.remove("flex");
+                }
+            });
+        });
+
+    </script>
+    <script>
+        // Render ikon setelah semua elemen HTML tersedia.
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+
+        const searchInput = document.getElementById("searchInput");
+        const statusFilter = document.getElementById("statusFilter");
+        const contractRows = [...document.querySelectorAll(".contract-row")];
+        const noResults = document.getElementById("noResults");
+        const resultCount = document.getElementById("resultCount");
+
+        function filterContracts() {
+            const keyword = searchInput.value.trim().toLowerCase();
+            const selectedStatus = statusFilter.value.toLowerCase();
+            let visibleCount = 0;
+
+            contractRows.forEach(row => {
+                const name = row.dataset.name || "";
+                const status = row.dataset.status || "";
+
+                const matchesName = name.includes(keyword);
+                const matchesStatus =
+                    !selectedStatus || status.includes(selectedStatus);
+
+                const visible = matchesName && matchesStatus;
+                row.classList.toggle("hidden", !visible);
+
+                if (visible) visibleCount++;
+            });
+
+            noResults.classList.toggle(
+                "hidden",
+                visibleCount > 0 || contractRows.length === 0
+            );
+
+            resultCount.textContent =
+                `Menampilkan ${visibleCount} dari ${contractRows.length} kontrak`;
+        }
+
+        searchInput.addEventListener("input", filterContracts);
+        statusFilter.addEventListener("change", filterContracts);
+
+        const activeCount = contractRows.filter(row =>
+            row.dataset.status === "aktif"
+        ).length;
+
+        const reviewCount = contractRows.filter(row => {
+            const status = row.dataset.status;
+            return status === "draft" || status.includes("menunggu");
+        }).length;
+
+        document.getElementById("activeCount").textContent = activeCount;
+        document.getElementById("reviewCount").textContent = reviewCount;
+
+        // Format nilai menjadi Rupiah.
+        document.querySelectorAll(".contract-value").forEach(el => {
+            const value = Number(el.dataset.value || 0);
+            el.textContent = new Intl.NumberFormat("id-ID", {
+                style: "currency",
+                currency: "IDR",
+                maximumFractionDigits: 0
+            }).format(value);
+        });
+    </script>
+    <script>
+        document.getElementById("current-date").textContent =
+            new Intl.DateTimeFormat("id-ID", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+            }).format(new Date());
+
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>s

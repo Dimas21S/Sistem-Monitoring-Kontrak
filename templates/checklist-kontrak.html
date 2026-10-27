@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Checklist Kontrak | Monitoring Kontrak</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand" style="background: transparent;"><img
+                src="/static/image/Desain_tanpa_judul__2_-removebg-preview.png" alt="logo-pertamina" class="brand-mark">
+            <p>Pertamina</p>
+        </div>
+        <div class="workspace-label">WORKSPACE</div>
+
+        <nav>
+            {% if current_user.role == 'USER' %}
+            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+                href="{{ url_for('dashboard') }}">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            {% if current_user.role == 'PIC' %}
+            <a href="{{ url_for('data_kontrak') }}"
+                class="nav-link {% if request.endpoint == 'data_kontrak' %}active{% endif %}">
+                <i data-lucide="files"></i>
+                <span>Data Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'tambah_kontrak' %}active{% endif %}"
+                href="{{ url_for('tambah_kontrak') }}">
+                <i data-lucide="file-text"></i>
+                <span>Form Input Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'checklist_kontrak' %}active{% endif %}"
+                href="{{ url_for('checklist_kontrak') }}">
+                <i data-lucide="calendar-days"></i>
+                <span>Checklist Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            <!-- Khusus Admin -->
+            {% if current_user.role == 'ADMIN' %}
+            <a class="nav-link {% if request.endpoint == 'index_pengguna' %}active{% endif %}"
+                href=" {{ url_for('index_pengguna') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Manajemen Pengguna</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+        </nav>
+        <div class="sidebar-bottom">
+            <form action="{{ url_for('logout') }}" method="POST">
+                <button type="button" id="logoutButton" class="nav-link logout-link">
+                    <i data-lucide="log-out"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+            <div class="profile">
+                <div class="avatar">{{ (current_user.nama_lengkap or current_user.username or 'U')[0]|upper }}</div>
+                <div><strong>{{ current_user.nama_lengkap or current_user.username }}</strong><small>{{
+                        current_user.role }}</small></div><i data-lucide="more-horizontal"></i>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-title">
+                <h1>Checklist Kontrak</h1>
+                <p>Contract Control Center</p>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="date-chip">
+                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    <time id="current-date"></time>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-[1400px] mr-auto ml-0 p-[18px]">
+
+            <!-- Header -->
+            <div class="w-full max-w-[2000px] flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+                <!-- Sub Header & Select Kontrak -->
+                <div
+                    class="w-full max-w-[2000px] min-h-[100px] flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+                            <span class="text-[11px] font-bold tracking-wider text-teal-700 uppercase">Document
+                                Readiness</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Pantau kelengkapan dokumen dari persiapan hingga routing dan
+                            upload SmartGEP.</p>
+                    </div>
+
+                    <div class="shrink-0">
+                        <select id="kontrak-select"
+                            class="w-full md:w-[380px] bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                            <option value="">-- Pilih Kontrak --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr_2fr] gap-4 mb-6">
+                <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Selesai</p>
+                        <p id="stat-done" class="text-xl font-bold text-slate-800">27</p>
+                        <p class="text-[11px] text-slate-400">dari <span id="stat-total">63</span> item</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-4 flex items-center gap-3">
+                    <div
+                        class="w-9 h-9 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 9v2m0 4h.01M10.29 3.86l-8.18 14.18A1 1 0 003 19.5h18a1 1 0 00.89-1.46L13.71 3.86a1 1 0 00-1.72 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400">Belum selesai</p>
+                        <p id="stat-remaining" class="text-xl font-bold text-slate-800">36</p>
+                        <p class="text-[11px] text-slate-400">perlu ditindaklanjuti</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl border border-slate-200 p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-sm text-slate-500">Progres keseluruhan <span id="stat-percent"
+                                class="font-bold text-slate-800">43%</span></p>
+                        <p class="text-xs text-slate-400">Tahap awal persiapan</p>
+                    </div>
+                    <div class="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-teal-600 rounded-full transition-all duration-300"
+                            style="width:43%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="grid grid-cols-1 md:grid-cols-[340px_1fr] gap-5 items-start">
+
+                <!-- Sidebar -->
+                <div class="bg-white rounded-xl border border-slate-200 p-4">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <p class="text-[11px] font-semibold tracking-wider text-slate-400">TAHAPAN DOKUMEN</p>
+                        <button class="text-slate-400 hover:text-slate-600" title="Reset">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="stage-list" class="space-y-1.5 max-h-[600px] overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- Detail panel -->
+                <div class="bg-white rounded-xl border border-slate-200 p-6">
+                    <div class="flex items-start justify-between mb-1">
+                        <p id="detail-tahap" class="text-[11px] font-semibold tracking-wider text-slate-400">TAHAP 01
+                        </p>
+                        <div class="flex items-center gap-2">
+
+                            <span id="detail-status"
+                                class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-600">
+                                Dalam proses
+                            </span>
+
+                            <button id="btn-target" type="button" title="Atur target tahapan"
+                                class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-teal-600 hover:border-teal-200 transition">
+
+                                <i data-lucide="calendar-days" class="w-4 h-4"></i>
+                            </button>
+
+                        </div>
+
+                    </div>
+                    <h2 id="detail-title" class="text-xl font-bold text-slate-800">Purchase Requisition (PR)</h2>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <p id="detail-subtitle" class="text-sm text-slate-400">
+                            PR dan referensi sumber harga
+                        </p>
+
+                        <span id="detail-target-separator" class="text-slate-300 hidden">
+                            •
+                        </span>
+
+                        <span id="detail-target-hari" class="text-sm font-medium text-slate-500 hidden">
+                        </span>
+
+                        <span id="detail-target-date-separator" class="text-slate-300 hidden">
+                            •
+                        </span>
+
+                        <span id="detail-tanggal-target" class="text-sm font-medium text-slate-500 hidden">
+                        </span>
+                    </div>
+
+                    <div class="border-t border-slate-100 mt-4 pt-2" id="detail-items"></div>
+
+                    <div class="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
+                        <p class="text-sm text-slate-400"><span id="detail-count">0 dari 5</span> item pada tahap ini
+                            selesai</p>
+                        <button id="complete-btn"
+                            class="flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Tandai Tahap Selesai
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Target Tahapan -->
+    <div id="target-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+        <!-- Overlay -->
+        <div id="target-modal-overlay" class="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px]">
+        </div>
+
+        <!-- Modal -->
+        <div class="relative w-full max-w-md mx-4 bg-white rounded-2xl
+               shadow-xl border border-slate-200 overflow-hidden">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-teal-50 text-teal-600
+                            flex items-center justify-center">
+                        <i data-lucide="calendar-days" class="w-5 h-5"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">
+                            Atur Target Tahapan
+                        </h3>
+
+                        <p id="modal-target-title" class="text-[11px] text-slate-400 mt-0.5">
+                            Purchase Requisition (PR)
+                        </p>
+                    </div>
+                </div>
+
+                <button id="btn-close-target" type="button" class="w-8 h-8 flex items-center justify-center
+                       rounded-lg text-slate-400 hover:bg-slate-100
+                       hover:text-slate-600 transition">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+
+            <!-- Body -->
+            <div class="p-5">
+                <!-- Tanggal mulai -->
+                <div class="mb-4">
+                    <label class="block text-[11px] font-semibold
+                              text-slate-500 mb-1.5">
+                        Tanggal Mulai
+                    </label>
+
+                    <div class="flex items-center gap-2
+                            bg-slate-50 border border-slate-200
+                            rounded-lg px-3 py-2.5">
+                        <i data-lucide="calendar" class="w-4 h-4 text-slate-400">
+                        </i>
+
+                        <span id="modal-tanggal-mulai" class="text-sm font-medium text-slate-700">
+                            07 September 2026
+                        </span>
+
+                        <span class="ml-auto text-[10px] text-slate-400">
+                            Otomatis
+                        </span>
+                    </div>
+                </div>
+
+
+                <!-- Target hari -->
+                <div class="mb-4">
+                    <label for="modal-target-hari" class="block text-[11px] font-semibold
+                           text-slate-500 mb-1.5">
+                        Target Penyelesaian
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="modal-target-hari" min="1" placeholder="Contoh: 5" class="flex-1 px-3 py-2.5 text-sm
+                               border border-slate-200 rounded-lg
+                               focus:outline-none
+                               focus:ring-2 focus:ring-teal-100
+                               focus:border-teal-500">
+                        <span class="text-sm text-slate-500">
+                            hari
+                        </span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1.5">
+                        Masukkan estimasi waktu penyelesaian tahapan.
+                    </p>
+                </div>
+
+                <!-- Tanggal target -->
+                <div class="mb-4">
+                    <label class="block text-[11px] font-semibold
+                              text-slate-500 mb-1.5">
+                        Tanggal Target
+                    </label>
+                    <div class="flex items-center gap-2
+                            bg-teal-50 border border-teal-100
+                            rounded-lg px-3 py-2.5">
+                        <i data-lucide="calendar-check" class="w-4 h-4 text-teal-600">
+                        </i>
+                        <span id="modal-tanggal-target" class="text-sm font-semibold text-teal-700">
+                            -
+                        </span>
+                    </div>
+                </div>
+
+
+                <!-- Info -->
+                <div class="flex gap-2 p-3 bg-blue-50 border
+                        border-blue-100 rounded-lg">
+                    <i data-lucide="info" class="w-4 h-4 text-blue-500 shrink-0 mt-0.5">
+                    </i>
+                    <p class="text-[10px] leading-relaxed text-blue-700">
+                        Tanggal mulai otomatis menggunakan hari ini.
+                        Tanggal target akan dihitung berdasarkan jumlah
+                        target hari yang kamu masukkan.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex items-center justify-end gap-2
+                    px-5 py-4 bg-slate-50 border-t border-slate-100">
+                <button id="btn-batal-target" type="button" class="px-4 py-2 text-xs font-medium
+                       text-slate-600 bg-white border
+                       border-slate-200 rounded-lg
+                       hover:bg-slate-50 transition">
+                    Batal
+                </button>
+
+                <button id="btn-simpan-target" type="button" class="flex items-center gap-2 px-4 py-2
+                       text-xs font-semibold text-white
+                       bg-teal-700 rounded-lg
+                       hover:bg-teal-800 transition">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                    Simpan Target
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="item-target-modal" class="fixed inset-0 z-50 hidden items-center justify-center">
+
+        <div id="item-target-modal-overlay" class="absolute inset-0 bg-black/30">
+        </div>
+
+        <div class="relative w-full max-w-md bg-white rounded-xl shadow-xl p-6">
+
+            <div class="flex items-center justify-between mb-5">
+
+                <div>
+                    <p class="text-[11px] uppercase tracking-wider
+                          font-semibold text-slate-400">
+                        Target Persyaratan
+                    </p>
+
+                    <h3 id="item-target-modal-title" class="text-lg font-bold text-slate-800 mt-1">
+                        -
+                    </h3>
+                </div>
+
+                <button id="btn-close-item-target" type="button" class="w-8 h-8 flex items-center justify-center
+                       rounded-lg hover:bg-slate-100">
+
+                    <i data-lucide="x" class="w-4 h-4"></i>
+
+                </button>
+
+            </div>
+
+            <div class="space-y-4">
+
+                <div>
+                    <label class="block text-xs font-medium
+                              text-slate-600 mb-1">
+                        Durasi Target
+                    </label>
+
+                    <div class="flex items-center gap-2">
+
+                        <input type="number" id="item-target-hari" min="1" placeholder="3" class="w-24 px-3 py-2 text-sm
+                               border border-slate-200 rounded-lg
+                               focus:outline-none
+                               focus:ring-2 focus:ring-teal-100">
+
+                        <span class="text-sm text-slate-400">
+                            hari
+                        </span>
+
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-4 space-y-3">
+
+                    <div class="flex justify-between">
+                        <span class="text-xs text-slate-400">
+                            Tanggal mulai
+                        </span>
+
+                        <span id="item-tanggal-mulai" class="text-xs font-medium text-slate-600">
+                            -
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between">
+                        <span class="text-xs text-slate-400">
+                            Tanggal target
+                        </span>
+
+                        <span id="item-tanggal-target" class="text-xs font-semibold text-teal-600">
+                            -
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="flex justify-end gap-2 mt-6">
+
+                <button id="btn-batal-item-target" type="button" class="px-4 py-2 text-sm rounded-lg
+                       bg-slate-100 text-slate-600
+                       hover:bg-slate-200">
+                    Batal
+                </button>
+
+                <button id="btn-simpan-item-target" type="button" class="px-4 py-2 text-sm rounded-lg
+                       bg-teal-700 text-white
+                       hover:bg-teal-800">
+                    Simpan
+                </button>
+
+            </div>
+
+        </div>
+    </div>
+
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+        const kontrakData = {{ kontrak_data | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='logout.js') }}"></script>
+    <script src="{{ url_for('static', filename='checklist-kontrak.js') }}"></script>
+
+
+</body>
+
+</html>

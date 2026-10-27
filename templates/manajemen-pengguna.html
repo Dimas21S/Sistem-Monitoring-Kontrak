@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kontrak | Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='new_style.css') }}">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand" style="background: transparent;"><img
+                src="/static/image/Desain_tanpa_judul__2_-removebg-preview.png" alt="logo-pertamina" class="brand-mark">
+            <p>Pertamina</p>
+        </div>
+        <div class="workspace-label">WORKSPACE</div>
+
+        <nav>
+
+            {% if current_user.role == 'PIC' %}
+            <a class="nav-link {% if request.endpoint == 'form_inputan' %}active{% endif %}"
+                href="{{ url_for('form_inputan') }}">
+                <i data-lucide="file-text"></i>
+                <span>Form Input Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'checklist_kontrak' %}active{% endif %}"
+                href="{{ url_for('checklist_kontrak') }}">
+                <i data-lucide="calendar-days"></i>
+                <span>Checklist Kontrak</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            <!-- Khusus Admin -->
+            {% if current_user.role == 'ADMIN' %}
+            <a class="nav-link {% if request.endpoint == 'index_pengguna' %}active{% endif %}"
+                href=" {{ url_for('index_pengguna') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Manajemen Pengguna</span>
+            </a>
+            {% endif %}
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            <form action="{{ url_for('logout') }}" method="POST">
+                <button type="button" id="logoutButton" class="nav-link logout-link">
+                    <i data-lucide="log-out"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+            <div class="profile">
+                <div class="avatar">{{ (current_user.nama_lengkap or current_user.username or 'U')[0]|upper }}</div>
+                <div><strong>{{ current_user.nama_lengkap or current_user.username }}</strong><small>{{
+                        current_user.role }}</small></div><i data-lucide="more-horizontal"></i>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-title">
+                <h1>Manajemen Pengguna</h1>
+                <p>Contract Control Center</p>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="date-chip">
+                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    <time id="current-date"></time>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-stack">
+
+            <div class="hero-summary">
+                <span class="font-mono eyebrow">
+                    Administration
+                </span>
+
+                <h1 class="font-display">
+                    Manajemen Pengguna
+                </h1>
+
+                <p>
+                    Kelola akun dan role pengguna sistem.
+                    Hanya Admin yang dapat membuka halaman ini.
+                </p>
+            </div>
+
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+                <!-- DAFTAR USER -->
+
+                <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+
+                    <div class="flex items-center justify-between mb-4">
+
+                        <div>
+                            <p class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                                Daftar akun
+                            </p>
+
+                            <h2 class="text-lg font-bold text-slate-900 mt-1">
+                                Pengguna Sistem
+                            </h2>
+                        </div>
+
+                        <button id="refresh-users" type="button" class="btn-outline">
+                            Refresh
+                        </button>
+
+                    </div>
+
+
+                    <div class="overflow-x-auto">
+
+                        <table class="w-full text-sm">
+
+                            <thead>
+
+                                <tr class="text-left border-b border-slate-100">
+
+                                    <th class="py-3 pr-4">
+                                        Username
+                                    </th>
+
+                                    <th class="py-3 pr-4">
+                                        Role
+                                    </th>
+
+                                    <th class="py-3 pr-4">
+                                        Email
+                                    </th>
+
+                                    <th class="py-3 pr-4">
+                                        Status
+                                    </th>
+
+                                    <th class="py-3 text-right">
+                                        Aksi
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="users-table-body"></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TAMBAH USER -->
+
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+
+                    <p class="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                        Akun baru
+                    </p>
+
+                    <h2 class="text-lg font-bold text-slate-900 mt-1">
+                        Tambah Pengguna
+                    </h2>
+
+
+                    <div class="space-y-4 mt-5">
+
+                        <div>
+
+                            <label class="field-label">
+                                Username *
+                            </label>
+
+                            <input id="u-username" class="input" placeholder="contoh: pic01">
+
+                        </div>
+
+
+                        <div>
+
+                            <label class="field-label">
+                                Email *
+                            </label>
+
+                            <input id="u-email" type="email" class="input" placeholder="email@contoh.com">
+
+                        </div>
+
+
+                        <div>
+
+                            <label class="field-label">
+                                Password *
+                            </label>
+
+                            <input id="u-password" type="password" class="input" placeholder="Minimal 8 karakter">
+
+                        </div>
+
+
+                        <div>
+
+                            <label class="field-label">
+                                Role *
+                            </label>
+
+                            <select id="u-role" class="input">
+
+                                <option value="PIC">
+                                    PIC
+                                </option>
+
+                                <option value="USER">
+                                    USER
+                                </option>
+
+                                <option value="ADMIN">
+                                    ADMIN
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <button id="create-user" type="button" class="btn-primary w-full">
+
+                            Buat Pengguna
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- MODAL EDIT PENGGUNA -->
+    <div id="editUserModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+
+        <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
+            <div class="flex items-center justify-between border-b px-6 py-4">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800">
+                        Edit Pengguna
+                    </h2>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Perbarui informasi akun pengguna.
+                    </p>
+                </div>
+
+                <button type="button" onclick="closeEditModal()" class="rounded-lg p-2 text-gray-500 hover:bg-gray-100"
+                    aria-label="Tutup modal">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+
+            <form id="editUserForm" class="space-y-4 p-6">
+                <input type="hidden" id="editUserId">
+
+                <div>
+                    <label for="editNama" class="mb-1 block text-sm font-medium">
+                        Nama Lengkap
+                    </label>
+                    <input id="editNama" name="nama_lengkap" type="text" required
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                </div>
+
+                <div>
+                    <label for="editUsername" class="mb-1 block text-sm font-medium">
+                        Username
+                    </label>
+                    <input id="editUsername" name="username" type="text" required
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                </div>
+
+                <div>
+                    <label for="editEmail" class="mb-1 block text-sm font-medium">
+                        Email
+                    </label>
+                    <input id="editEmail" name="email" type="email" required
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                </div>
+
+                <div>
+                    <label for="editRole" class="mb-1 block text-sm font-medium">
+                        Role
+                    </label>
+                    <select id="editRole" name="role" required
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500">
+                        <option value="ADMIN">Admin</option>
+                        <option value="PIC">PIC</option>
+                        <option value="USER">User</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="editStatus" class="mb-1 block text-sm font-medium">
+                        Status Akun
+                    </label>
+                    <select id="editStatus" name="is_active" required
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500">
+                        <option value="true">Aktif</option>
+                        <option value="false">Nonaktif</option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-3 border-t pt-4">
+                    <button type="button" onclick="closeEditModal()"
+                        class="rounded-lg border px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                        Batal
+                    </button>
+
+                    <button id="saveUserButton" type="submit"
+                        class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+                        Simpan Perubahan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL HAPUS PENGGUNA -->
+    <div id="deleteUserModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4">
+
+        <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div class="mb-4 flex items-center gap-3">
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+                    <i data-lucide="trash-2" class="h-6 w-6"></i>
+                </div>
+
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800">
+                        Hapus Pengguna?
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Tindakan ini perlu dikonfirmasi.
+                    </p>
+                </div>
+            </div>
+
+            <p class="mb-2 text-sm text-gray-600">
+                Apakah kamu yakin ingin menghapus akun berikut?
+            </p>
+
+            <div class="mb-6 rounded-lg bg-gray-50 p-3">
+                <p id="deleteUserName" class="font-semibold text-gray-800"></p>
+                <p id="deleteUserUsername" class="text-sm text-gray-500"></p>
+            </div>
+
+            <p class="mb-5 text-sm text-red-600">
+                Akun yang dihapus tidak dapat digunakan lagi untuk login.
+            </p>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeDeleteModal()"
+                    class="rounded-lg border px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50">
+                    Batal
+                </button>
+
+                <button id="confirmDeleteButton" type="button" onclick="confirmDeleteUser()"
+                    class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                    Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LOGOUT CONFIRMATION ================= -->
+    <div id="logoutModal"
+        class="hidden fixed inset-0 z-[100] items-center justify-center p-6 bg-slate-950/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
+            <div class="flex items-start gap-3">
+                <div
+                    class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-900">Konfirmasi Logout</h2>
+                    <p class="text-sm text-slate-500 mt-1">Apakah Anda ingin logout?</p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" id="cancelLogout"
+                    class="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition">Tidak</button>
+
+                <form action="{{ url_for('logout') }}" method="POST" class="flex-1">
+                    <button type="submit" id="confirmLogout"
+                        class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold text-center transition">
+                        Ya
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='logout.js') }}"></script>
+
+    <script>
+        (function () {
+
+            const $ = id => document.getElementById(id);
+
+            const esc = value =>
+                String(value ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+
+
+            // =====================================================
+            // LOAD USERS
+            // =====================================================
+
+
+            async function loadUsers() {
+                const tbody = $('users-table-body');
+
+                try {
+                    const res = await fetch('/api/users', {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    console.log('Status:', res.status);
+                    console.log('URL:', res.url);
+                    console.log(
+                        'Content-Type:',
+                        res.headers.get('content-type')
+                    );
+
+                    // Baca respons sebagai teks terlebih dahulu.
+                    const text = await res.text();
+
+                    console.log('Respons server:', text);
+
+                    // Pastikan respons benar-benar JSON.
+                    let users;
+
+                    try {
+                        users = JSON.parse(text);
+                    } catch {
+                        throw new Error(
+                            'Server mengembalikan HTML atau respons bukan JSON. ' +
+                            'Periksa sesi login, URL API, dan terminal Flask.'
+                        );
+                    }
+
+                    if (!res.ok) {
+                        throw new Error(
+                            users.error || 'Gagal mengambil data pengguna.'
+                        );
+                    }
+
+                    if (!Array.isArray(users)) {
+                        throw new Error(
+                            'Format data pengguna dari server tidak sesuai.'
+                        );
+                    }
+
+                    tbody.innerHTML = users.length
+                        ? users.map(user => `
+                <tr class="border-b border-slate-50">
+                    <td class="py-3 pr-4 font-semibold">
+                        ${esc(user.username)}
+                    </td>
+
+                    <td class="py-3 pr-4">
+                        <span class="px-2 py-1 rounded-full text-[10px] font-bold ${user.role === 'ADMIN'
+                                ? 'bg-red-50 text-red-600'
+                                : user.role === 'PIC'
+                                    ? 'bg-amber-50 text-amber-600'
+                                    : 'bg-teal-50 text-teal-700'
+                            }">
+                            ${esc(user.role)}
+                        </span>
+                    </td>
+
+                    <td class="py-3 pr-4">
+                        ${esc(user.email)}
+                    </td>
+
+                    <td class="py-3 pr-4">
+                        ${user.is_active
+                                ? `<span class="px-2 py-1 rounded-full bg-green-50 text-green-600 text-[10px] font-bold">Aktif</span>`
+                                : `<span class="px-2 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold">Nonaktif</span>`
+                            }
+                    </td>
+
+                    <td class="py-3 text-right whitespace-nowrap">
+                        <button
+                            type="button"
+                            onclick="openEditModal(${user.id})"
+                            class="rounded-lg p-2 text-blue-600 hover:bg-blue-50"
+                            title="Edit pengguna">
+                            <i data-lucide="pencil" class="h-4 w-4"></i>
+                        </button>
+
+                        <button
+                            type="button"
+                            onclick="openDeleteModal(
+                                ${user.id},
+                                ${JSON.stringify(user.nama_lengkap || "")},
+                                ${JSON.stringify(user.username || "")}
+                            )"
+                            class="rounded-lg p-2 text-red-600 hover:bg-red-50"
+                            title="Hapus pengguna">
+                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('')
+                        : `
+                <tr>
+                    <td colspan="5"
+                        class="py-8 text-center text-slate-400">
+                        Belum ada pengguna.
+                    </td>
+                </tr>
+            `;
+
+                } catch (error) {
+                    console.error('Gagal memuat pengguna:', error);
+
+                    tbody.innerHTML = `
+            <tr>
+                <td colspan="5"
+                    class="py-8 text-center text-red-500">
+                    Gagal memuat data pengguna.
+                </td>
+            </tr>
+        `;
+
+                    alert(`Gagal memuat pengguna\n\n${error.message}`);
+                }
+
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }
+
+            // =====================================================
+            // CREATE USER
+            // =====================================================
+
+
+            // =====================================================
+            // CREATE USER
+            // =====================================================
+
+            $('create-user').addEventListener('click', async function () {
+
+                const payload = {
+                    username: $('u-username').value.trim(),
+                    email: $('u-email').value.trim(),
+                    password: $('u-password').value,
+                    role: $('u-role').value
+                };
+
+                if (!payload.username || !payload.email ||
+                    !payload.password || !payload.role) {
+                    alert('Semua kolom wajib diisi.');
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(payload)
+                    });
+
+                    // Baca respons sebagai teks terlebih dahulu.
+                    const text = await res.text();
+
+                    console.log('Status:', res.status);
+                    console.log('URL:', res.url);
+                    console.log(
+                        'Content-Type:',
+                        res.headers.get('content-type')
+                    );
+                    console.log('Respons server:', text);
+
+                    let body;
+
+                    try {
+                        body = JSON.parse(text);
+                    } catch (parseError) {
+                        throw new Error(
+                            `Respons server bukan JSON (HTTP ${res.status}). ` +
+                            'Periksa Console dan terminal Flask.'
+                        );
+                    }
+
+                    if (!res.ok) {
+                        throw new Error(
+                            body.error ||
+                            body.message ||
+                            `Gagal membuat pengguna (HTTP ${res.status}).`
+                        );
+                    }
+
+                    // alert(
+                    //     `Berhasil\n\nPengguna ${body.username || payload.username} berhasil dibuat.`
+                    // );
+
+                    $('u-username').value = '';
+                    $('u-email').value = '';
+                    $('u-password').value = '';
+
+                    await loadUsers();
+
+                } catch (error) {
+                    console.error('Gagal membuat user:', error);
+                    alert(`Gagal membuat pengguna\n\n${error.message}`);
+                }
+            });
+
+
+            // =====================================================
+            // EDIT USER
+            // =====================================================
+
+            window.editUser = async function (id) {
+
+                try {
+
+                    const res =
+                        await fetch(`/api/users/${id}`);
+
+                    const user =
+                        await res.json();
+
+
+                    if (!res.ok) {
+
+                        throw new Error(
+                            user.error ||
+                            'Gagal mengambil data pengguna.'
+                        );
+
+                    }
+
+
+                    const username =
+                        prompt(
+                            'Username:',
+                            user.username
+                        );
+
+
+                    if (username === null)
+                        return;
+
+
+                    const email =
+                        prompt(
+                            'Email:',
+                            user.email
+                        );
+
+
+                    if (email === null)
+                        return;
+
+
+                    const role =
+                        prompt(
+                            'Role (ADMIN / PIC / USER):',
+                            user.role
+                        );
+
+
+                    if (role === null)
+                        return;
+
+
+                    const password =
+                        prompt(
+                            'Password baru (kosongkan jika tidak diubah):'
+                        );
+
+
+                    const payload = {
+
+                        username:
+                            username.trim(),
+
+                        email:
+                            email.trim(),
+
+                        role:
+                            role.trim().toUpperCase()
+
+                    };
+
+
+                    if (password) {
+
+                        payload.password =
+                            password;
+
+                    }
+
+
+                    const updateRes =
+                        await fetch(
+                            `/api/users/${id}`,
+                            {
+                                method: 'PUT',
+
+                                headers: {
+                                    'Content-Type':
+                                        'application/json'
+                                },
+
+                                body:
+                                    JSON.stringify(payload)
+                            }
+                        );
+
+
+                    const body =
+                        await updateRes.json();
+
+
+                    if (!updateRes.ok) {
+
+                        throw new Error(
+                            body.error ||
+                            'Gagal memperbarui pengguna.'
+                        );
+
+                    }
+
+
+                    alert(
+                        `Berhasil\n\n` +
+                        `Pengguna berhasil diperbarui.`
+                    );
+
+
+                    await loadUsers();
+
+
+                } catch (error) {
+
+                    alert(
+                        `Gagal\n\n${error.message}`
+                    );
+
+                }
+
+            };
+
+
+            // =====================================================
+            // DELETE USER
+            // =====================================================
+
+            window.deleteUser = async function (
+                id,
+                username
+            ) {
+
+                const confirmed =
+                    confirm(
+                        `Hapus pengguna "${username}"?`
+                    );
+
+
+                if (!confirmed)
+                    return;
+
+
+                try {
+
+                    const res =
+                        await fetch(
+                            `/api/users/${id}`,
+                            {
+                                method: 'DELETE'
+                            }
+                        );
+
+
+                    const body =
+                        await res.json();
+
+
+                    if (!res.ok) {
+
+                        throw new Error(
+                            body.error ||
+                            'Gagal menghapus pengguna.'
+                        );
+
+                    }
+
+
+                    alert(
+                        `Berhasil\n\n` +
+                        `Pengguna berhasil dihapus.`
+                    );
+
+
+                    await loadUsers();
+
+
+                } catch (error) {
+
+                    alert(
+                        `Gagal\n\n${error.message}`
+                    );
+
+                }
+
+            };
+
+
+            // =====================================================
+            // REFRESH
+            // =====================================================
+
+            $('refresh-users')
+                .addEventListener(
+                    'click',
+                    loadUsers
+                );
+
+
+            // =====================================================
+            // INITIAL LOAD
+            // =====================================================
+
+            loadUsers();
+
+        })();
+    </script>
+    <script src="{{ url_for('static', filename='manajemen-pengguna.js') }}"></script>
+    <script>
+        document.getElementById("current-date").textContent =
+            new Intl.DateTimeFormat("id-ID", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+            }).format(new Date());
+
+        lucide.createIcons();
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+
+</html>

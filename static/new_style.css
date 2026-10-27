@@ -1,0 +1,1392 @@
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+        /* =========================================================
+   ROOT / VARIABLES
+========================================================= */
+
+        :root {
+            --ink: #0F172A;
+            --canvas: #F1F5F9;
+
+            --border: #E2E8F0;
+            --border-light: #EEF1F5;
+            --border-strong: #CBD5E1;
+
+            --slate: #64748B;
+            --slate-bg: #EEF1F5;
+
+            --primary: #2F5FE0;
+            --primary-light: #EAF0FE;
+
+            --teal: #0D9488;
+            --teal-bg: #E4F5F3;
+
+            --amber: #C2760D;
+            --amber-bg: #FBF0DC;
+
+            --rose: #DC2626;
+            --rose-bg: #FCE9E8;
+        }
+
+
+        /* =========================================================
+   GLOBAL RESET
+========================================================= */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--canvas);
+            color: var(--ink);
+        }
+
+        input,
+        select,
+        button {
+            font-family: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary) !important;
+        }
+
+
+        /* =========================================================
+   TYPOGRAPHY
+========================================================= */
+
+        .font-display {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .font-mono {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+
+        /* =========================================================
+   SCROLLBAR
+========================================================= */
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-strong);
+            border-radius: 4px;
+        }
+
+
+        /* =========================================================
+   TABLE
+========================================================= */
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 12px 16px;
+        }
+
+        thead tr {
+            background: var(--canvas);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        thead th {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--slate);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid var(--border-light);
+        }
+
+
+        /* =========================================================
+   FORM ELEMENTS
+========================================================= */
+
+        .input {
+            width: 100%;
+            padding: 9px 11px;
+
+            border: 1px solid var(--border);
+            border-radius: 8px;
+
+            font-size: 14px;
+            color: var(--ink);
+
+            background: #fff;
+        }
+
+
+        /* =========================================================
+   CARD
+========================================================= */
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+        }
+
+
+        /* =========================================================
+   BUTTONS
+========================================================= */
+
+        .btn-primary,
+        .btn-outline,
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+
+            border-radius: 8px;
+
+            font-size: 13px;
+        }
+
+        .btn-primary {
+            padding: 9px 16px;
+            border: none;
+
+            background: var(--primary);
+            color: #fff;
+
+            font-weight: 600;
+        }
+
+        .btn-outline {
+            padding: 9px 14px;
+
+            border: 1px solid var(--border);
+            background: #fff;
+
+            color: var(--slate);
+        }
+
+        .btn-danger {
+            padding: 9px 14px;
+
+            border: 1px solid var(--rose-bg);
+            background: var(--rose-bg);
+
+            color: var(--rose);
+        }
+
+        .btn-primary svg,
+        .btn-outline svg,
+        .btn-danger svg {
+            width: 14px;
+            height: 14px;
+        }
+
+
+        /* =========================================================
+   FIELD LABEL
+========================================================= */
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            margin-bottom: 6px;
+
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+
+            color: var(--slate);
+        }
+
+        .field-label svg {
+            width: 12px;
+            height: 12px;
+        }
+
+
+
+
+        /* =========================================================
+   MAIN CONTENT
+========================================================= */
+
+        .app-main {
+            flex: 1 1 auto;
+
+            width: 0;
+            min-width: 0;
+            min-height: 100vh;
+
+            display: flex;
+            flex-direction: column;
+
+            overflow-x: hidden;
+        }
+
+        .top-title {
+            margin: 4px 0 18px;
+
+            font-size: 22px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-wrap {
+            position: relative;
+        }
+
+        .search-wrap svg {
+            position: absolute;
+
+            top: 10px;
+            left: 11px;
+
+            width: 14px;
+            height: 14px;
+
+            color: var(--slate);
+        }
+
+        .search-wrap .input {
+            width: 190px;
+            padding-left: 32px;
+
+            font-size: 13px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+
+            padding: 0;
+
+            justify-content: center;
+        }
+
+        .icon-btn svg {
+            width: 15px;
+            height: 15px;
+        }
+
+
+        /* =========================================================
+   PAGE
+========================================================= */
+
+        .page-view {
+            width: 100%;
+
+            padding: 0 28px 28px;
+
+            min-width: 0;
+        }
+
+        .page-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+
+            width: 100%;
+        }
+
+        .eyebrow {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow.dark {
+            color: var(--slate);
+        }
+
+
+        /* =========================================================
+   HERO SUMMARY
+========================================================= */
+
+        .hero-summary {
+            padding: 22px 26px;
+
+            border-radius: 16px;
+
+            background: linear-gradient(135deg,
+                    var(--ink) 0%,
+                    #1E3A6E 100%);
+
+            color: #fff;
+        }
+
+        .hero-summary h1 {
+            margin: 8px 0 4px;
+
+            font-size: 21px;
+        }
+
+        .hero-summary p {
+            max-width: 560px;
+
+            margin: 0;
+
+            font-size: 13.5px;
+
+            opacity: 0.8;
+        }
+
+
+        /* =========================================================
+   KPI
+========================================================= */
+
+        .kpi-grid {
+            display: grid;
+
+            grid-template-columns: repeat(auto-fit,
+                    minmax(200px, 1fr));
+
+            gap: 14px;
+        }
+
+        .kpi-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+
+            padding: 18px 20px;
+        }
+
+        .kpi-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-icon {
+            width: 30px;
+            height: 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 8px;
+        }
+
+        .kpi-icon svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .kpi-sub,
+        .subtle {
+            font-size: 12px;
+            color: var(--slate);
+        }
+
+
+        /* =========================================================
+   DASHBOARD TWO COLUMN
+========================================================= */
+
+        .dashboard-two-col {
+            display: grid;
+
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+
+            gap: 16px;
+
+            align-items: start;
+        }
+
+
+        /* =========================================================
+   SECTION
+========================================================= */
+
+        .section-title {
+            margin: 0 0 16px;
+
+            font-size: 16px;
+        }
+
+        .section-title.no-bottom {
+            margin-bottom: 0;
+        }
+
+        .stack-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+
+        /* =========================================================
+   PROGRESS
+========================================================= */
+
+        .stage-row {
+            display: flex;
+            justify-content: space-between;
+
+            margin-bottom: 5px;
+
+            font-size: 12.5px;
+        }
+
+        .stage-row span:last-child {
+            color: var(--slate);
+        }
+
+        .stage-row b {
+            color: var(--ink);
+        }
+
+        .progress-track {
+            height: 8px;
+
+            overflow: hidden;
+
+            border-radius: 999px;
+
+            background: var(--canvas);
+        }
+
+        .progress-fill {
+            height: 100%;
+
+            border-radius: 999px;
+
+            background: var(--primary);
+        }
+
+
+        /* =========================================================
+   PENDING ITEMS
+========================================================= */
+
+        .pending-item {
+            padding-left: 10px;
+
+            border-left: 3px solid;
+        }
+
+        .pending-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            margin-bottom: 2px;
+
+            font-size: 11px;
+            color: var(--slate);
+        }
+
+        .pending-label {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .pending-contract {
+            font-size: 12px;
+            color: var(--slate);
+        }
+
+        .empty-inline {
+            font-size: 13px;
+            color: var(--slate);
+        }
+
+
+        /* =========================================================
+   PORTFOLIO
+========================================================= */
+
+        .portfolio-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+
+            padding: 16px 20px;
+
+            flex-wrap: wrap;
+        }
+
+        .portfolio-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pill-btn,
+        .dark-pill {
+            padding: 6px 13px;
+
+            border-radius: 999px;
+
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .pill-btn {
+            border: 1px solid var(--border);
+
+            background: #fff;
+            color: var(--slate);
+        }
+
+        .pill-btn.selected {
+            border-color: var(--primary);
+
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .dark-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            padding: 6px 14px;
+
+            border: none;
+
+            background: var(--ink);
+            color: #fff;
+        }
+
+        .dark-pill svg {
+            width: 13px;
+            height: 13px;
+        }
+
+
+        /* =========================================================
+   CONTRACT
+========================================================= */
+
+        .contract-code {
+            font-size: 10.5px;
+            color: var(--slate);
+        }
+
+        .contract-title {
+            max-width: 240px;
+
+            font-weight: 600;
+        }
+
+        .strong {
+            color: var(--ink);
+            font-weight: 700;
+        }
+
+        .status-label {
+            margin-bottom: 3px;
+        }
+
+        .progress-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mini-track {
+            width: 70px;
+            height: 6px;
+
+            overflow: hidden;
+
+            border-radius: 999px;
+
+            background: var(--canvas);
+        }
+
+        .mini-fill {
+            height: 100%;
+
+            border-radius: 999px;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-small {
+            width: 28px;
+            height: 28px;
+
+            padding: 0;
+
+            justify-content: center;
+        }
+
+        .icon-small svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        .empty-table {
+            padding: 28px 16px;
+
+            text-align: center;
+
+            color: var(--slate);
+        }
+
+
+        /* =========================================================
+   CONTRACT FORM
+========================================================= */
+
+        .form-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+
+            flex-wrap: wrap;
+        }
+
+        .form-kicker {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+
+            margin-bottom: 6px;
+        }
+
+        .form-kicker span:first-child {
+            width: 14px;
+            height: 2px;
+
+            display: inline-block;
+
+            border-radius: 2px;
+
+            background: var(--rose);
+        }
+
+        .form-heading h2 {
+            margin: 0 0 6px;
+
+            font-size: 21px;
+        }
+
+        .form-heading p {
+            max-width: 480px;
+
+            margin: 0;
+
+            font-size: 13px;
+            color: var(--slate);
+        }
+
+        .mode-badge {
+            padding: 4px 12px;
+
+            border: 1px solid var(--border-strong);
+            border-radius: 999px;
+
+            color: var(--slate);
+
+            font-size: 10.5px;
+            font-weight: 700;
+
+            letter-spacing: 0.05em;
+        }
+
+
+        /* Contract form card */
+
+        .contract-form-card {
+            display: grid;
+
+            grid-template-columns: 280px minmax(0, 1fr);
+
+            overflow: hidden;
+
+            border: 1px solid var(--border);
+            border-radius: 16px;
+
+            background: #fff;
+        }
+
+
+        /* Form aside */
+
+        .form-aside {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+
+            padding: 26px;
+
+            background: linear-gradient(160deg,
+                    var(--ink) 0%,
+                    #0B4B47 100%);
+
+            color: #fff;
+        }
+
+        .aside-icon {
+            width: 40px;
+            height: 40px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 10px;
+
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .aside-icon svg {
+            width: 19px;
+            height: 19px;
+        }
+
+        .step-label {
+            margin-bottom: 6px;
+
+            font-size: 10.5px;
+
+            letter-spacing: 0.08em;
+
+            opacity: 0.65;
+        }
+
+        .form-aside h3 {
+            margin: 0 0 8px;
+
+            font-size: 17px;
+        }
+
+        .form-aside p {
+            margin: 0;
+
+            font-size: 12.5px;
+            line-height: 1.5;
+
+            opacity: 0.75;
+        }
+
+
+        /* Control note */
+
+        .control-note {
+            display: flex;
+            gap: 9px;
+
+            margin-top: auto;
+            padding: 12px;
+
+            border-radius: 10px;
+
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .control-note svg {
+            width: 16px;
+            height: 16px;
+
+            flex-shrink: 0;
+        }
+
+        .control-note div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-note b {
+            font-size: 12px;
+        }
+
+        .control-note span {
+            font-size: 11px;
+            line-height: 1.4;
+
+            opacity: 0.75;
+        }
+
+
+        /* Form body */
+
+        .form-body {
+            min-width: 0;
+
+            padding: 26px;
+        }
+
+        .form-grid {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 16px;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+
+        /* Money input */
+
+        .money-input {
+            display: flex;
+            align-items: center;
+
+            overflow: hidden;
+
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .money-input>span {
+            align-self: stretch;
+
+            display: flex;
+            align-items: center;
+
+            padding: 0 10px;
+
+            background: var(--canvas);
+
+            color: var(--slate);
+
+            font-size: 13px;
+        }
+
+        .money-input .input {
+            border: none;
+        }
+
+
+        /* Form footer */
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+
+            margin-top: 24px;
+            padding-top: 18px;
+
+            border-top: 1px solid var(--border-light);
+
+            flex-wrap: wrap;
+        }
+
+        .save-note {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            font-size: 12px;
+            color: var(--slate);
+        }
+
+        .save-note svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+
+        /* =========================================================
+   SAVED CONTRACTS
+========================================================= */
+
+        .saved-contracts {
+            padding: 18px;
+        }
+
+        .saved-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+
+            margin-top: 10px;
+        }
+
+        .saved-contract {
+            padding: 8px 13px;
+
+            border: 1px solid var(--border);
+            border-radius: 9px;
+
+            background: #fff;
+
+            text-align: left;
+        }
+
+        .saved-contract.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .saved-contract div {
+            font-size: 12.5px;
+            font-weight: 600;
+        }
+
+        .saved-contract small {
+            font-size: 11px;
+            color: var(--slate);
+        }
+
+        .empty-picker {
+            padding: 28px;
+
+            border-style: dashed;
+
+            text-align: center;
+
+            color: var(--slate);
+
+            font-size: 13.5px;
+        }
+
+
+        /* =========================================================
+   CONTRACT PICKER
+========================================================= */
+
+        .contract-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+
+            margin-bottom: 4px;
+        }
+
+        .contract-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 8px 14px;
+
+            border: 1px solid var(--border);
+            border-radius: 10px;
+
+            background: #fff;
+
+            font-size: 13px;
+        }
+
+        .contract-chip.active {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+
+        /* =========================================================
+   ACTIVE CONTRACT
+========================================================= */
+
+        .active-contract {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+
+            padding: 20px;
+
+            flex-wrap: wrap;
+        }
+
+        .active-contract h2 {
+            margin: 0 0 6px;
+
+            font-size: 19px;
+        }
+
+        .active-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+
+            font-size: 12.5px;
+            color: var(--slate);
+        }
+
+
+        /* =========================================================
+   PROGRESS RING
+========================================================= */
+
+        .progress-ring {
+            position: relative;
+
+            flex-shrink: 0;
+        }
+
+        .ring-label {
+            position: absolute;
+            inset: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+
+        /* =========================================================
+   CHECKLIST
+========================================================= */
+
+        .checklist-section {
+            overflow: hidden;
+        }
+
+        .accordion-head {
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 14px 16px;
+
+            border: none;
+
+            background: none;
+
+            text-align: left;
+        }
+
+        .accordion-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .accordion-left svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .accordion-left span {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .accordion-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .accordion-right>.font-mono {
+            font-size: 12px;
+            color: var(--slate);
+        }
+
+        .ticks {
+            display: flex;
+            gap: 2px;
+        }
+
+        .tick {
+            width: 5px;
+            height: 14px;
+
+            border-radius: 1px;
+        }
+
+        .section-detail {
+            padding: 6px 16px 16px;
+
+            border-top: 1px solid var(--border);
+        }
+
+        .check-item {
+            padding: 12px 0;
+
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .check-item-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+
+            margin-bottom: 8px;
+
+            flex-wrap: wrap;
+        }
+
+        .check-item-head>span {
+            font-size: 13.5px;
+            font-weight: 600;
+        }
+
+        .check-item-head>div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .target-input {
+            width: auto;
+
+            padding: 4px 8px;
+
+            font-size: 11.5px;
+        }
+
+        .step-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .checkbox-row {
+            width: 100%;
+
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 3px 0;
+
+            border: none;
+
+            background: none;
+
+            font-size: 13px;
+
+            text-align: left;
+        }
+
+        .checkbox-row svg {
+            width: 16px;
+            height: 16px;
+        }
+
+
+        /* =========================================================
+   FLOW
+========================================================= */
+
+        .flow-card {
+            padding: 22px 24px;
+        }
+
+        .flow-heading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            margin-bottom: 4px;
+        }
+
+        .flow-heading svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .flow-heading span {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .flow-card>p {
+            margin: 0 0 22px;
+
+            font-size: 12.5px;
+            color: var(--slate);
+        }
+
+        .flow-scroll {
+            overflow-x: auto;
+
+            padding-bottom: 8px;
+        }
+
+        .flow-track {
+            display: flex;
+
+            min-width: max-content;
+        }
+
+        .flow-node {
+            display: flex;
+            align-items: center;
+
+            flex-shrink: 0;
+        }
+
+        .flow-node button {
+            width: 148px;
+
+            padding: 14px 12px;
+
+            border: 1.5px solid;
+            border-radius: 12px;
+
+            background: #fff;
+
+            text-align: left;
+
+            cursor: pointer;
+        }
+
+        .flow-node button .font-mono {
+            font-size: 10.5px;
+            color: var(--slate);
+        }
+
+        .flow-label {
+            margin-top: 3px;
+
+            font-size: 12.5px;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .flow-line {
+            width: 22px;
+            height: 2px;
+
+            flex-shrink: 0;
+        }
+
+
+        /* =========================================================
+   RESPONSIVE — TABLET
+========================================================= */
+
+        @media (max-width: 900px) {
+
+            .dashboard-two-col {
+                grid-template-columns: 1fr;
+            }
+
+            .contract-form-card {
+                grid-template-columns: 1fr;
+            }
+
+            .form-aside {
+                min-height: 220px;
+            }
+
+            .top-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .search-wrap {
+                flex: 1;
+            }
+
+            .search-wrap .input {
+                width: 100%;
+            }
+        }
+
+
+        /* =========================================================
+   RESPONSIVE — MOBILE
+========================================================= */
+
+        @media (max-width: 700px) {
+
+            .sidebar-inner {
+                width: 205px;
+                min-width: 205px;
+                flex-basis: 205px;
+            }
+
+            .page-view {
+                padding: 0 16px 20px;
+            }
+
+            /* .topbar {
+                padding: 16px 16px 0;
+            } */
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field.full {
+                grid-column: auto;
+            }
+
+            .portfolio-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .portfolio-head {
+                align-items: flex-start;
+            }
+
+            .nav-btn {
+                font-size: 12px;
+            }
+
+            .top-title {
+                font-size: 19px;
+            }
+
+            .contract-title {
+                max-width: 180px;
+            }
+        }

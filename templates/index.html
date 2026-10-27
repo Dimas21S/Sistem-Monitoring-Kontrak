@@ -1,0 +1,1404 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kontrak | Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <!-- <div class="brand"><span class="brand-mark">K</span><span>kontrak<span class="brand-dot">.</span></span></div> -->
+        <div class="brand" style="background: transparent;"><img
+                src="/static/image/Desain_tanpa_judul__2_-removebg-preview.png" alt="logo-pertamina" class="brand-mark">
+            <p>Pertamina</p>
+        </div>
+        <div class="workspace-label">WORKSPACE</div>
+
+        <nav>
+            {% if current_user.role == 'USER' %}
+            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+                href="{{ url_for('dashboard') }}">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            {% if current_user.role == 'PIC' %}
+            <a class="nav-link {% if request.endpoint == 'form_inputan' %}active{% endif %}"
+                href="{{ url_for('form_inputan') }}">
+                <i data-lucide="file-text"></i>
+                <span>Form Input Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'checklist_kontrak' %}active{% endif %}"
+                href="{{ url_for('checklist_kontrak') }}">
+                <i data-lucide="calendar-days"></i>
+                <span>Checklist Kontrak</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            <!-- Khusus Admin -->
+            {% if current_user.role == 'ADMIN' %}
+            <a class="nav-link {% if request.endpoint == 'index_pengguna' %}active{% endif %}"
+                href=" {{ url_for('index_pengguna') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Manajemen Pengguna</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-bottom">
+            <form action="{{ url_for('logout') }}" method="POST">
+                <button type="button" id="logoutButton" class="nav-link logout-link">
+                    <i data-lucide="log-out"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+            <div class="profile">
+                <div class="avatar">{{ (current_user.nama_lengkap or current_user.username or 'U')[0]|upper }}</div>
+                <div><strong>{{ current_user.nama_lengkap or current_user.username }}</strong><small>{{
+                        current_user.role }}</small></div><i data-lucide="more-horizontal"></i>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-title">
+                <h1>Dashboard</h1>
+                <p>Contract Control Center</p>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="date-chip">
+                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    <time id="current-date"></time>
+                </div>
+            </div>
+        </header>
+
+        <section class="page-heading" id="overview">
+            <div>
+                <h1>Selamat datang di Monitoring Kontrak Zona 1</h1>
+                <p class="subtitle">Berikut kondisi portofolio kontrak Anda hari ini.</p>
+            </div>
+        </section>
+
+        <!-- KPI CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 kpi-cards">
+
+            <!-- A. Total Kontrak -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm cursor-pointer" id="totalContractsKpi">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2.5 rounded-lg bg-blue-50 text-blue-600">
+                        <i data-lucide="files" class="w-5 h-5"></i>
+                    </div>
+                </div>
+
+                <p class="text-sm font-medium text-gray-500">
+                    Total Kontrak
+                </p>
+
+                <h3 class="text-2xl font-bold text-gray-900 mt-1">
+                    {{ summary.total }}
+                </h3>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Semua kontrak terdaftar
+                </p>
+            </div>
+
+
+            <!-- B. Kontrak Dibuat Tahun Ini -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm cursor-pointer" id="currentYearKpi">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2.5 rounded-lg bg-indigo-50 text-indigo-600">
+                        <i data-lucide="calendar-plus" class="w-5 h-5"></i>
+                    </div>
+                </div>
+
+                <p class="text-sm font-medium text-gray-500">
+                    Kontrak Tahun Ini
+                </p>
+
+                <h3 class="text-2xl font-bold text-gray-900 mt-1">
+                    {{ summary.kontrak_tahun_ini }}
+                </h3>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Kontrak dibuat pada tahun berjalan
+                </p>
+            </div>
+
+
+            <!-- C. Kontrak dengan Progres di Bawah 60% -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm cursor-pointer" id="attentionKpi">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2.5 rounded-lg bg-amber-50 text-amber-600">
+                        <i data-lucide="chart-no-axes-column-decreasing" class="w-5 h-5"></i>
+                    </div>
+                </div>
+
+                <p class="text-sm font-medium text-gray-500">
+                    Perlu Perhatian
+                </p>
+
+                <h3 class="text-2xl font-bold text-gray-900 mt-1">
+                    {{ summary.kontrak_progress_rendah }}
+                </h3>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Kontrak belum mencapai progres 60%
+                </p>
+            </div>
+
+
+            <!-- D. Rata-rata Progres -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm cursor-pointer" id="avgProgressKpi">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2.5 rounded-lg bg-emerald-50 text-emerald-600">
+                        <i data-lucide="chart-no-axes-combined" class="w-5 h-5"></i>
+                    </div>
+                </div>
+
+                <p class="text-sm font-medium text-gray-500">
+                    Rata-rata Progres
+                </p>
+
+                <h3 class="text-2xl font-bold text-gray-900 mt-1">
+                    {{ avg_progress }}%
+                </h3>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Rata-rata progres seluruh kontrak
+                </p>
+            </div>
+
+
+            <!-- E. Total Anggaran -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm cursor-pointer" id="totalBudgetKpi">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-2.5 rounded-lg bg-violet-50 text-violet-600">
+                        <i data-lucide="wallet" class="w-5 h-5"></i>
+                    </div>
+                </div>
+
+                <p class="text-sm font-medium text-gray-500">
+                    Total Anggaran
+                </p>
+
+                <h3 class="text-2xl font-bold text-gray-900 mt-1">
+                    {{ summary.value|currency }}
+                </h3>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Akumulasi anggaran seluruh kontrak
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5 mt-5">
+
+            <!-- PROGRES PORTOFOLIO -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-5">
+
+                <div class="mb-7">
+                    <p class="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
+                        Progres Portofolio
+                    </p>
+                    <h2 class="text-lg font-bold text-slate-800 mt-1">
+                        Kesiapan Kontrak
+                    </h2>
+                </div>
+
+                <div class="space-y-6">
+                    {% for item in portfolio %}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-700 truncate">
+                                    {{ item.status }}
+                                </p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">
+                                    {{ item.jumlah_kontrak }} kontrak
+                                </p>
+                            </div>
+
+                            <span class="text-xs font-semibold text-slate-600 ml-4">
+                                {{ item.progress }}%
+                            </span>
+                        </div>
+
+                        <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500
+                        {% if item.progress >= 75 %}
+                            bg-teal-500
+                        {% elif item.progress >= 40 %}
+                            bg-orange-400
+                        {% else %}
+                            bg-purple-500
+                        {% endif %}" style="width: {{ [[item.progress, 0]|max, 100]|min }}%;">
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <div class="py-8 text-center">
+                        <div class="text-2xl mb-2 text-teal-500">✓</div>
+                        <p class="text-sm font-semibold text-slate-600">
+                            Belum ada data portofolio
+                        </p>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Data kesiapan kontrak akan muncul setelah tersedia.
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            <!-- TARGET TERDEKAT -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-5">
+                <div class="mb-6 flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
+                            Perlu Tindak Lanjut
+                        </p>
+                        <h2 class="mt-1 text-lg font-bold text-slate-800">
+                            Target Terdekat
+                        </h2>
+                    </div>
+
+                    <button type="button" id="showAllFollowUp"
+                        class="flex-shrink-0 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-teal-500 hover:bg-teal-50 hover:text-teal-700">
+                        Lihat Lebih Banyak
+                    </button>
+                </div>
+
+
+                <div class="space-y-3">
+                    {% for item in follow_up %}
+                    <div class="flex items-center gap-3 p-3 rounded-xl border border-slate-100">
+
+                        <!-- ICON STATUS -->
+                        <div class="flex-shrink-0">
+                            {% if item.sisa_hari < 0 %} <div
+                                class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
+                                <span class="text-red-500 text-sm font-bold">!</span>
+                        </div>
+                        {% elif item.sisa_hari <= 2 %} <div
+                            class="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center">
+                            <span class="text-orange-500 text-sm font-bold">!</span>
+                    </div>
+                    {% else %}
+                    <div class="w-9 h-9 rounded-lg bg-slate-50 flex items-center justify-center">
+                        <span class="text-slate-400 text-sm">•</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- INFORMASI PERSYARATAN -->
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-slate-700 truncate">
+                        {{ item.persyaratan }}
+                    </p>
+                    <p class="text-[11px] text-slate-400 truncate mt-0.5">
+                        {{ item.kontrak }}
+                    </p>
+                    <p class="text-[10px] text-slate-400 mt-1">
+                        {{ item.stage }}
+                    </p>
+                </div>
+
+                <!-- INFORMASI TARGET -->
+                <div class="text-right flex-shrink-0">
+                    {% if item.sisa_hari < 0 %} <p class="text-xs font-semibold text-red-500">
+                        Terlambat
+                        </p>
+                        {% elif item.sisa_hari == 0 %}
+                        <p class="text-xs font-semibold text-orange-500">
+                            Hari ini
+                        </p>
+                        {% elif item.sisa_hari == 1 %}
+                        <p class="text-xs font-semibold text-orange-500">
+                            Besok
+                        </p>
+                        {% else %}
+                        <p class="text-xs font-semibold text-slate-600">
+                            {{ item.sisa_hari }} hari lagi
+                        </p>
+                        {% endif %}
+
+                        <p class="text-[10px] text-slate-400 mt-0.5">
+                            {{ item.tanggal_target.strftime('%d %b %Y') }}
+                        </p>
+                </div>
+
+            </div>
+            {% else %}
+            <div class="py-8 text-center">
+                <div class="text-2xl mb-2 text-teal-500">✓</div>
+                <p class="text-sm font-semibold text-slate-600">
+                    Tidak ada tindak lanjut
+                </p>
+                <p class="text-xs text-slate-400 mt-1">
+                    Semua persyaratan dengan target sudah selesai.
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+        </div>
+
+        </div>
+
+
+        </div>
+
+        </div>
+
+        <!-- <div class="grid grid-cols-1 gap-5 mt-5"> -->
+        <!-- BAR CHART LOKASI -->
+        <!-- <div class="bg-white rounded-xl border border-slate-200 p-5">
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-slate-800">
+                        Kontrak Berdasarkan Lokasi
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Jumlah kontrak berdasarkan lokasi
+                    </p>
+                </div>
+                <div class="h-[300px]">
+                    <canvas id="lokasiKontrakChart"></canvas>
+                </div>
+            </div>
+        </div> -->
+
+        <!-- Tabel Data Kontrak -->
+        <section class="panel contracts-panel" id="contracts">
+            <div class="panel-heading table-heading">
+                <div>
+                    <h2>Semua kontrak</h2>
+                    <p>Kelola dan pantau seluruh kontrak dalam satu tempat.</p>
+                </div>
+                <div class="table-actions">
+                    <label class="search-box"><i data-lucide="search"></i>
+                        <input id="searchInput" type="search" placeholder="Cari kontrak atau vendor..."></label>
+                    <select id="statusFilter" aria-label="Filter status">
+                        <option value="all">Semua status</option>
+                        <option value="Persiapan Dokumen">Persiapan Dokumen</option>
+                        <option value="Routing & Persetujuan">Routing & Persetujuan</option>
+                        <option value="Submit SmartGEP">Submit SmartGEP</option>
+                        <option value="Siap Proses Tender">Siap Proses Tender</option>
+                    </select><button class="secondary-button"><i data-lucide="download"></i> Ekspor</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 p-4">
+                <table class="w-full min-w-[880px] text-sm">
+                    <thead>
+                        <tr
+                            class="text-left text-[11px] font-semibold tracking-wider text-slate-400 border-b border-slate-100">
+                            <th class="pb-3 pr-4 font-semibold">KONTRAK</th>
+                            <th class="pb-3 pr-4 font-semibold">LOKASI</th>
+                            <th class="pb-3 pr-4 font-semibold">WP&amp;B / NILAI OE</th>
+                            <th class="pb-3 pr-4 font-semibold">TARGET</th>
+                            <th class="pb-3 pr-4 font-semibold">PIC</th>
+                            <th class="pb-3 pr-4 font-semibold">STATUS &amp; PROGRES</th>
+                            <!-- <th class="pb-3"></th> -->
+                        </tr>
+                    </thead>
+                    <tbody data-tab-panel="semua" class="active divide-y divide-slate-100" id="contractTableBody">
+                        {% for contract in contracts %}
+                        <tr class="align-top">
+                            <!-- KONTRAK -->
+                            <td class="py-4 pr-4">
+                                <p class="text-xs font-semibold text-brand-700">
+                                    KZ1-026-{{ "%03d"|format(contract.id) }}
+                                </p>
+                                <p class="font-semibold text-slate-800">
+                                    {{ contract.judul }}
+                                </p>
+                                <p class="text-xs text-slate-400 mt-0.5">
+                                    Anggaran
+                                    Rp{{ "{:,.0f}".format(contract.anggaran) }}
+                                </p>
+                            </td>
+
+                            <!-- LOKASI -->
+                            <td class="py-4 pr-4 text-slate-500">
+                                <span class="flex items-center gap-1.5">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5 shrink-0"></i>
+                                    {{ contract.lokasi }}
+                                </span>
+                            </td>
+
+                            <!-- WP&B / NILAI -->
+                            <td class="py-4 pr-4">
+                                <p class="text-xs text-slate-400">
+                                    WP&B {{ contract.tahun_wpb }}
+                                </p>
+                                <p class="font-semibold text-slate-800">
+                                    Rp{{ "{:,.0f}".format(contract.nilai) }}
+                                </p>
+                            </td>
+
+                            <!-- TARGET -->
+                            <td class="py-4 pr-4 text-slate-500">
+                                <span class="flex items-center gap-1.5">
+                                    <i data-lucide="target" class="w-3.5 h-3.5 shrink-0"></i>
+                                    {{ contract.target_realisasi or '-' }}
+                                </span>
+                            </td>
+
+                            <!-- PIC -->
+                            <td class="py-4 pr-4 text-slate-500">
+                                <span class="flex items-center gap-1.5">
+                                    <i data-lucide="user" class="w-3.5 h-3.5 shrink-0"></i>
+                                    {{ contract.pic_user.nama_lengkap if contract.pic_user else '-' }}
+                                </span>
+                            </td>
+
+                            <!-- STATUS -->
+                            <td class="py-4 pr-4 min-w-[160px]">
+                                {% if contract.status == "Aktif" %}
+                                <span data-contract-status="{{ contract.id }}"
+                                    class="inline-block text-[11px] font-semibold text-green-600 bg-green-50px-2.5 py-1 rounded-full mb-1.5">
+                                    Aktif
+                                </span>
+                                {% elif contract.status == "Menunggu perpanjangan" %}
+                                <span data-contract-status="{{ contract.id }}"
+                                    class="inline-block text-[11px] font-semibold text-amber-600 bg-amber-50px-2.5 py-1 rounded-full mb-1.5">
+                                    Menunggu perpanjangan
+                                </span>
+                                {% elif contract.status == "Draft" %}
+                                <span data-contract-status="{{ contract.id }}"
+                                    class="inline-block text-[11px] font-semibold text-slate-500 bg-slate-100px-2.5 py-1 rounded-full mb-1.5">
+                                    Draft
+                                </span>
+                                {% else %}
+                                <span data-contract-status="{{ contract.id }}"
+                                    class="inline-block text-[11px] font-semibold text-slate-500 bg-slate-100px-2.5 py-1 rounded-full mb-1.5">
+                                    {{ contract.status }}
+                                </span>
+                                {% endif %}
+                                <div class="flex items-center gap-2">
+                                    <div class="h-1.5 flex-1 rounded-full bg-slate-100 overflow-hidden">
+                                        <div class="h-full rounded-full bg-sky-500"
+                                            style="width: {{ contract.progress }}%">
+                                        </div>
+                                    </div>
+                                    <span class="text-xs font-semibold text-slate-600">
+                                        {{ contract.progress }}%
+                                    </span>
+                                </div>
+                            </td>
+
+                            <!-- DETAIL -->
+                            <td class="py-4 pl-2 text-right">
+                                <button type="button"
+                                    class="open-modal-btn inline-flex text-slate-400 hover:text-brand-700"
+                                    data-contract-id="{{ contract.id }}" data-id="{{ contract.id }}"
+                                    data-judul="{{ contract.judul }}" data-lokasi="{{ contract.lokasi }}"
+                                    data-anggaran="{{ contract.anggaran }}" data-nilai="{{ contract.nilai }}"
+                                    data-wpb="{{ contract.tahun_wpb }}"
+                                    data-target="{{ contract.target_realisasi or '-' }}"
+                                    data-pic="{{ contract.pic or '-' }}" data-status="{{ contract.status }}"
+                                    data-progress="{{ contract.progress }}">
+                                    <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                                </button>
+                            </td>
+                        </tr>
+
+                        {% else %}
+                        <!-- Jika belum ada kontrak -->
+                        <tr>
+                            <td colspan="7" class="py-10 text-center text-slate-400">
+                                Belum ada data kontrak.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tbody data-tab-panel="perhatian" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+            <div class="table-footer">
+
+                <span>
+                    Menampilkan
+                    <strong id="visibleCount">{{ contracts|length }}</strong>
+                    dari {{ summary.total }} kontrak
+                </span>
+
+                <div class="pagination">
+                    <button disabled>
+                        <i data-lucide="chevron-left"></i>
+                    </button>
+                    <button class="current">1</button>
+                    <button disabled>
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Overlay -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b">
+                <div>
+                    <h2 class="text-lg font-semibold">
+                        Edit Kontrak
+                    </h2>
+                    <p class="text-sm text-slate-500">
+                        Perbarui informasi kontrak
+                    </p>
+                </div>
+                <button type="button" id="closeEditModal" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <!-- Form -->
+            <form id="editContractForm">
+                <input type="hidden" id="editId">
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Judul -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-1">
+                            Judul Kontrak
+                        </label>
+                        <input type="text" id="editJudul" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Lokasi -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Lokasi Kontrak
+                        </label>
+                        <input type="text" id="editLokasi" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- PIC -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            PIC
+                        </label>
+
+                        <select id="editPic" class="w-full border rounded-lg px-3 py-2" required>
+                            <option value="">Pilih PIC</option>
+
+                            {% for user in daftar_pic %}
+                            <option value="{{ user.id }}">
+                                {{ user.nama_lengkap }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Anggaran -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Anggaran
+                        </label>
+                        <input type="number" id="editAnggaran" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Nilai OE -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Nilai OE
+                        </label>
+                        <input type="number" id="editNilai" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Tahun WPB -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Tahun WPB
+                        </label>
+                        <input type="number" id="editTahunWpb" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Target Realisasi -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">
+                            Target Realisasi
+                        </label>
+                        <input type="date" id="editTargetRealisasi" class="w-full border rounded-lg px-3 py-2" required>
+                    </div>
+                    <!-- Status -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-1">
+                            Status
+                        </label>
+                        <select id="editStatus" class="w-full border rounded-lg px-3 py-2" required>
+                            <option value="Persiapan Dokumen">
+                                Persiapan Dokumen
+                            </option>
+                            <option value="Routing & Persetujuan">
+                                Routing & Persetujuan
+                            </option>
+                            <option value="Submit SmartGEP">
+                                Submit SmartGEP
+                            </option>
+                            <option value="Siap Proses Tender">
+                                Siap Proses Tender
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Footer -->
+                <div class="flex justify-end gap-3 px-6 py-4 border-t">
+                    <button type="button" id="cancelEdit" class="px-4 py-2 border rounded-lg">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-[9999] hidden
+           min-w-[320px] max-w-sm
+           rounded-xl border bg-white
+           shadow-lg px-4 py-3
+           transition-all duration-300">
+
+        <div class="flex items-start gap-3">
+
+            <div id="toastIcon" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full">
+            </div>
+
+            <div class="min-w-0 flex-1">
+                <p id="toastTitle" class="text-sm font-semibold text-slate-800">
+                </p>
+
+                <p id="toastMessage" class="mt-0.5 text-xs text-slate-500">
+                </p>
+            </div>
+
+            <button type="button" onclick="hideToast()" class="text-slate-400 hover:text-slate-600">
+
+                <i data-lucide="x" class="w-4 h-4"></i>
+
+            </button>
+
+        </div>
+    </div>
+
+    <!-- Modal Kesiapan Kontrak -->
+    <div id="portfolioModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+
+        <!-- Overlay -->
+        <div id="portfolioOverlay" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm">
+        </div>
+
+        <!-- Konten Modal -->
+        <div class="relative w-full max-w-xl bg-white rounded-2xl
+                shadow-2xl border border-slate-200
+                max-h-[85vh] overflow-y-auto">
+
+            <!-- Header -->
+            <div class="flex items-start justify-between p-6
+                    border-b border-slate-100">
+
+                <div>
+                    <p class="text-[11px] font-semibold tracking-wider
+                          text-slate-400 uppercase">
+                        Progres Portofolio
+                    </p>
+
+                    <h2 class="text-xl font-bold text-slate-800 mt-1">
+                        Kesiapan Kontrak
+                    </h2>
+
+                    <p class="text-sm text-slate-500 mt-1">
+                        Ringkasan progres berdasarkan status kontrak.
+                    </p>
+                </div>
+
+                <button type="button" id="closePortfolioModal" aria-label="Tutup modal" class="w-9 h-9 flex items-center justify-center
+                           rounded-lg text-slate-500
+                           hover:bg-slate-100 hover:text-slate-800
+                           transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6">
+                <div class="space-y-6">
+
+                    {% for item in portfolio %}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-700">
+                                    {{ item.status }}
+                                </p>
+
+                                <p class="text-xs text-slate-400 mt-1">
+                                    {{ item.jumlah_kontrak }} kontrak
+                                </p>
+                            </div>
+
+                            <span class="text-sm font-semibold text-slate-600 ml-4">
+                                {{ item.progress }}%
+                            </span>
+                        </div>
+
+                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500
+                            {% if item.progress >= 75 %}
+                                bg-teal-500
+                            {% elif item.progress >= 40 %}
+                                bg-orange-400
+                            {% else %}
+                                bg-purple-500
+                            {% endif %}" style="width: {{ [[item.progress, 0]|max, 100]|min }}%;">
+                            </div>
+                        </div>
+                    </div>
+
+                    {% else %}
+                    <div class="py-8 text-center">
+                        <i data-lucide="chart-no-axes-combined" class="w-9 h-9 mx-auto mb-3 text-slate-300"></i>
+
+                        <p class="text-sm font-semibold text-slate-600">
+                            Belum ada data portofolio
+                        </p>
+
+                        <p class="text-xs text-slate-400 mt-1">
+                            Data kesiapan kontrak akan muncul setelah tersedia.
+                        </p>
+                    </div>
+                    {% endfor %}
+
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-end p-5 border-t border-slate-100">
+                <button type="button" id="closePortfolioFooter" class="px-4 py-2 rounded-xl bg-slate-100
+                           hover:bg-slate-200 text-sm font-semibold
+                           text-slate-700 transition">
+                    Tutup
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal Perlu Perhatian -->
+    <div id="attentionModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+
+        <!-- Overlay -->
+        <div id="attentionOverlay" class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
+
+        <!-- Modal Content -->
+        <div class="relative w-full max-w-4xl max-h-[85vh] overflow-hidden
+                flex flex-col bg-white rounded-2xl border border-slate-200
+                shadow-2xl">
+
+            <!-- Header -->
+            <div class="flex items-start justify-between p-6 border-b border-slate-100">
+                <div>
+                    <p class="text-[11px] font-semibold tracking-wider
+                          text-orange-500 uppercase">
+                        Monitoring Kontrak
+                    </p>
+
+                    <h2 class="text-xl font-bold text-slate-800 mt-1">
+                        Kontrak Perlu Perhatian
+                    </h2>
+
+                    <p class="text-sm text-slate-500 mt-1">
+                        Daftar kontrak dengan progres di bawah 60%.
+                    </p>
+                </div>
+
+                <button type="button" id="closeAttentionModal" aria-label="Tutup modal" class="w-9 h-9 flex items-center justify-center rounded-lg
+                           text-slate-500 hover:bg-slate-100">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Daftar Kontrak -->
+            <div class="p-6 overflow-auto">
+                {% if contracts_needing_attention %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-200 text-slate-500">
+                                <th class="py-3 pr-4 font-semibold">No.</th>
+                                <th class="py-3 pr-4 font-semibold">Nama Kontrak</th>
+                                <th class="py-3 pr-4 font-semibold">Status</th>
+                                <th class="py-3 pr-4 font-semibold">Progres</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100">
+                            {% for item in contracts_needing_attention %}
+                            <tr class="hover:bg-slate-50">
+                                <td class="py-4 pr-4 text-slate-400">
+                                    {{ loop.index }}
+                                </td>
+
+                                <td class="py-4 pr-4">
+                                    <p class="font-semibold text-slate-700">
+                                        {{ item.judul_kontrak }}
+                                    </p>
+                                    <p class="text-xs text-slate-400 mt-1">
+                                        {{ item.lokasi_kontrak or '-' }}
+                                    </p>
+                                </td>
+
+                                <td class="py-4 pr-4">
+                                    <span class="inline-flex px-2.5 py-1 rounded-lg
+                                             bg-slate-100 text-slate-600 text-xs">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+
+                                <td class="py-4 pr-4 min-w-[130px]">
+                                    <div class="flex items-center gap-3">
+                                        <div class="flex-1 h-2 bg-slate-100
+                                                rounded-full overflow-hidden">
+                                            <div class="h-full rounded-full bg-orange-400"
+                                                style="width: {{ [[item.progress, 0]|max, 100]|min }}%;">
+                                            </div>
+                                        </div>
+
+                                        <span class="font-semibold text-orange-600">
+                                            {{ item.progress }}%
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% else %}
+                <div class="py-12 text-center">
+                    <i data-lucide="circle-check-big" class="w-10 h-10 mx-auto text-teal-500 mb-3"></i>
+
+                    <p class="font-semibold text-slate-700">
+                        Tidak ada kontrak yang perlu perhatian
+                    </p>
+
+                    <p class="text-sm text-slate-400 mt-1">
+                        Semua kontrak memiliki progres minimal 60%.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-between items-center gap-3 p-5
+                    border-t border-slate-100 bg-white">
+                <p class="text-xs text-slate-400">
+                    Total: {{ contracts_needing_attention|length }} kontrak
+                </p>
+
+                <button type="button" id="closeAttentionFooter" class="px-4 py-2 rounded-xl bg-slate-100
+                           hover:bg-slate-200 text-sm font-semibold text-slate-700">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SEMUA TINDAK LANJUT -->
+    <div id="allFollowUpModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4"
+        role="dialog" aria-modal="true" aria-labelledby="allFollowUpTitle">
+        <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+            <!-- Header modal -->
+            <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                <div>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-teal-600">
+                        Monitoring Kontrak
+                    </p>
+                    <h2 id="allFollowUpTitle" class="mt-1 text-lg font-bold text-slate-800">
+                        Semua Tindak Lanjut
+                    </h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Daftar persyaratan yang belum selesai dan memiliki target tanggal.
+                    </p>
+                </div>
+
+                <button type="button" id="closeAllFollowUp"
+                    class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    aria-label="Tutup modal">
+                    <i data-lucide="x" class="h-5 w-5"></i>
+                </button>
+            </div>
+
+            <!-- Ringkasan -->
+            <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-3">
+                <p class="text-sm text-slate-600">
+                    Total persyaratan:
+                    <span class="font-bold text-slate-800">
+                        {{ follow_up_all|length }}
+                    </span>
+                </p>
+                <span class="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+                    Perlu Tindak Lanjut
+                </span>
+            </div>
+
+            <!-- Isi modal -->
+            <div class="flex-1 overflow-y-auto">
+                {% if follow_up_all %}
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[700px] text-left">
+                        <thead
+                            class="sticky top-0 z-10 bg-white text-[11px] uppercase tracking-wider text-slate-400 shadow-sm">
+                            <tr>
+                                <th class="px-6 py-4">Persyaratan</th>
+                                <th class="px-6 py-4">Nama Kontrak</th>
+                                <th class="px-6 py-4">Tahapan</th>
+                                <th class="px-6 py-4">Target Tanggal</th>
+                                <th class="px-6 py-4">Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100">
+                            {% for item in follow_up_all %}
+                            <tr class="transition hover:bg-slate-50">
+                                <td class="px-6 py-4">
+                                    <p class="text-sm font-semibold text-slate-700">
+                                        {{ item.persyaratan }}
+                                    </p>
+                                </td>
+
+                                <td class="px-6 py-4">
+                                    <p class="max-w-[200px] truncate text-sm text-slate-600" title="{{ item.kontrak }}">
+                                        {{ item.kontrak }}
+                                    </p>
+                                </td>
+
+                                <td class="px-6 py-4">
+                                    <p class="text-sm text-slate-600">
+                                        {{ item.stage }}
+                                    </p>
+                                </td>
+
+                                <td class="whitespace-nowrap px-6 py-4">
+                                    <p class="text-sm text-slate-600">
+                                        {{ item.tanggal_target.strftime('%d %b %Y') }}
+                                    </p>
+                                </td>
+
+                                <td class="whitespace-nowrap px-6 py-4">
+                                    {% if item.sisa_hari < 0 %} <span
+                                        class="inline-flex rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600">
+                                        Terlambat
+                                        </span>
+                                        {% elif item.sisa_hari == 0 %}
+                                        <span
+                                            class="inline-flex rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
+                                            Hari ini
+                                        </span>
+                                        {% elif item.sisa_hari == 1 %}
+                                        <span
+                                            class="inline-flex rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-600">
+                                            Besok
+                                        </span>
+                                        {% else %}
+                                        <span
+                                            class="inline-flex rounded-full bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-700">
+                                            {{ item.sisa_hari }} hari lagi
+                                        </span>
+                                        {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="px-6 py-14 text-center">
+                    <div class="mb-3 text-3xl text-teal-500">✓</div>
+                    <p class="text-sm font-semibold text-slate-700">
+                        Tidak ada tindak lanjut
+                    </p>
+                    <p class="mt-1 text-xs text-slate-400">
+                        Semua persyaratan dengan target sudah selesai.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer -->
+            <div class="flex items-center justify-between border-t border-slate-100 px-6 py-4">
+                <p class="text-xs text-slate-400">
+                    Data mengikuti kontrak yang ditampilkan pada dashboard.
+                </p>
+                <button type="button" id="closeAllFollowUpFooter"
+                    class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RINCIAN TOTAL ANGGARAN -->
+    <div id="totalBudgetModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4"
+        role="dialog" aria-modal="true" aria-labelledby="totalBudgetModalTitle">
+        <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-xl bg-teal-50 p-3">
+                        <i data-lucide="wallet" class="h-6 w-6 text-teal-600"></i>
+                    </div>
+                    <div>
+                        <h2 id="totalBudgetModalTitle" class="text-lg font-bold text-slate-800">
+                            Rincian Anggaran Kontrak
+                        </h2>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Daftar kontrak beserta anggaran masing-masing.
+                        </p>
+                    </div>
+                </div>
+
+                <button type="button" id="closeTotalBudgetModal"
+                    class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    aria-label="Tutup modal">
+                    <i data-lucide="x" class="h-5 w-5"></i>
+                </button>
+            </div>
+
+            <!-- Ringkasan -->
+            <div class="border-b border-slate-100 bg-teal-50/70 px-6 py-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">
+                            Total Anggaran
+                        </p>
+                        <p class="mt-1 text-2xl font-bold text-teal-700">
+                            {{ summary.value|currency }}
+                        </p>
+                    </div>
+
+                    <div class="rounded-xl bg-white px-4 py-3">
+                        <p class="text-xs text-slate-500">Jumlah Kontrak</p>
+                        <p class="mt-1 text-xl font-bold text-slate-800">
+                            {{ kontrak_list|length }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabel kontrak -->
+            <div class="flex-1 overflow-y-auto">
+                {% if kontrak_list %}
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[700px] text-left">
+                        <thead
+                            class="sticky top-0 z-10 bg-white text-xs uppercase tracking-wider text-slate-400 shadow-sm">
+                            <tr>
+                                <th class="px-6 py-4">No.</th>
+                                <th class="px-6 py-4">Nama Kontrak</th>
+                                <th class="px-6 py-4">Lokasi</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-right">Anggaran</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100">
+                            {% for kontrak in kontrak_list %}
+                            <tr class="transition hover:bg-slate-50">
+                                <td class="px-6 py-4 text-sm text-slate-400">
+                                    {{ loop.index }}
+                                </td>
+
+                                <td class="px-6 py-4">
+                                    <p class="text-sm font-semibold text-slate-700">
+                                        {{ kontrak.judul_kontrak }}
+                                    </p>
+                                    <p class="mt-1 text-xs text-slate-400">
+                                        ID: {{ kontrak.id }}
+                                    </p>
+                                </td>
+
+                                <td class="px-6 py-4 text-sm text-slate-600">
+                                    {{ kontrak.lokasi_kontrak or '-' }}
+                                </td>
+
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                                        {{ kontrak.status or 'Tanpa Status' }}
+                                    </span>
+                                </td>
+
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-slate-800">
+                                    {{ (kontrak.anggaran or 0)|currency }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                        <tfoot class="sticky bottom-0 bg-slate-50">
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-sm font-bold text-slate-700">
+                                    Total Anggaran
+                                </td>
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-bold text-teal-700">
+                                    {{ summary.value|currency }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="px-6 py-14 text-center">
+                    <i data-lucide="file-search" class="mx-auto mb-3 h-10 w-10 text-slate-300"></i>
+                    <p class="text-sm font-semibold text-slate-700">
+                        Belum ada data kontrak
+                    </p>
+                    <p class="mt-1 text-xs text-slate-400">
+                        Daftar anggaran akan muncul setelah kontrak tersedia.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-end border-t border-slate-100 px-6 py-4">
+                <button type="button" id="closeTotalBudgetModalFooter"
+                    class="rounded-lg bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL KONTRAK TAHUN BERJALAN -->
+    <div id="currentYearModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4"
+        role="dialog" aria-modal="true" aria-labelledby="currentYearModalTitle">
+        <div class="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+                <div class="flex items-center gap-3">
+                    <div class="rounded-xl bg-blue-50 p-3">
+                        <i data-lucide="calendar-days" class="h-6 w-6 text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h2 id="currentYearModalTitle" class="text-lg font-bold text-slate-800">
+                            Kontrak Tahun Berjalan
+                        </h2>
+                        <p class="mt-1 text-sm text-slate-500">
+                            Daftar kontrak berdasarkan tanggal pembuatan.
+                        </p>
+                    </div>
+                </div>
+
+                <button type="button" id="closeCurrentYearModal"
+                    class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                    aria-label="Tutup modal">
+                    <i data-lucide="x" class="h-5 w-5"></i>
+                </button>
+            </div>
+
+            <!-- Ringkasan -->
+            <div
+                class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 bg-blue-50/70 px-6 py-4">
+                <div>
+                    <p class="text-xs font-medium text-slate-500">
+                        Tahun
+                    </p>
+                    <p class="mt-1 text-2xl font-bold text-blue-700">
+                        {{ tahun_sekarang }}
+                    </p>
+                </div>
+
+                <div class="rounded-xl bg-white px-4 py-3">
+                    <p class="text-xs text-slate-500">Jumlah Kontrak</p>
+                    <p class="mt-1 text-xl font-bold text-slate-800">
+                        {{ kontrak_tahun_berjalan|length }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tabel -->
+            <div class="flex-1 overflow-y-auto">
+                {% if kontrak_tahun_berjalan %}
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[750px] text-left">
+                        <thead
+                            class="sticky top-0 z-10 bg-white text-xs uppercase tracking-wider text-slate-400 shadow-sm">
+                            <tr>
+                                <th class="px-6 py-4">No.</th>
+                                <th class="px-6 py-4">Nama Kontrak</th>
+                                <th class="px-6 py-4">Lokasi</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4">Tanggal Dibuat</th>
+                                <th class="px-6 py-4 text-right">Anggaran</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100">
+                            {% for kontrak in kontrak_tahun_berjalan %}
+                            <tr class="transition hover:bg-slate-50">
+                                <td class="px-6 py-4 text-sm text-slate-400">
+                                    {{ loop.index }}
+                                </td>
+
+                                <td class="px-6 py-4">
+                                    <p class="text-sm font-semibold text-slate-700">
+                                        {{ kontrak.judul_kontrak }}
+                                    </p>
+                                    <p class="mt-1 text-xs text-slate-400">
+                                        ID: {{ kontrak.id }}
+                                    </p>
+                                </td>
+
+                                <td class="px-6 py-4 text-sm text-slate-600">
+                                    {{ kontrak.lokasi_kontrak or '-' }}
+                                </td>
+
+                                <td class="px-6 py-4">
+                                    <span
+                                        class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                                        {{ kontrak.status or 'Tanpa Status' }}
+                                    </span>
+                                </td>
+
+                                <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-600">
+                                    {% if kontrak.created_at %}
+                                    {{ kontrak.created_at.strftime('%d %b %Y') }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+
+                                <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-slate-800">
+                                    {{ (kontrak.anggaran or 0)|currency }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="px-6 py-14 text-center">
+                    <i data-lucide="calendar-x" class="mx-auto mb-3 h-10 w-10 text-slate-300"></i>
+                    <p class="text-sm font-semibold text-slate-700">
+                        Belum ada kontrak tahun ini
+                    </p>
+                    <p class="mt-1 text-xs text-slate-400">
+                        Kontrak yang dibuat pada tahun berjalan akan ditampilkan di sini.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Footer -->
+            <div class="flex justify-end border-t border-slate-100 px-6 py-4">
+                <button type="button" id="closeCurrentYearModalFooter"
+                    class="rounded-lg bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LOGOUT CONFIRMATION ================= -->
+    <div id="logoutModal"
+        class="hidden fixed inset-0 z-[100] items-center justify-center p-6 bg-slate-950/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
+            <div class="flex items-start gap-3">
+                <div
+                    class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-900">Konfirmasi Logout</h2>
+                    <p class="text-sm text-slate-500 mt-1">Apakah Anda ingin logout?</p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" id="cancelLogout"
+                    class="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition">Tidak</button>
+
+                <form action="{{ url_for('logout') }}" method="POST" class="flex-1">
+                    <button type="submit" id="confirmLogout"
+                        class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold text-center transition">
+                        Ya
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='update-status.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="{{ url_for('static', filename='kpi-card.js') }}"></script>
+    <script src="{{ url_for('static', filename='logout.js') }}"></script>
+    <script>
+        const lokasiLabels = {{ lokasi_labels | tojson }};
+        const lokasiCounts = {{ lokasi_counts | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='bar-chart.js') }}"></script>
+    <script src="{{ url_for('static', filename='search-filter.js') }}"></script>
+    <script>
+        document.getElementById("current-date").textContent =
+            new Intl.DateTimeFormat("id-ID", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+            }).format(new Date());
+
+        lucide.createIcons();
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const totalContractsKpi = document.getElementById("totalContractsKpi");
+            const contractsTable = document.getElementById("contracts");
+
+            if (totalContractsKpi && contractsTable) {
+                totalContractsKpi.addEventListener("click", function () {
+                    contractsTable.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start"
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

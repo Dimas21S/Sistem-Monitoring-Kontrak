@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kontrak | Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .dot-connector {
+            background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+            background-size: 6px 6px;
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand" style="background: transparent;"><img
+                src="/static/image/Desain_tanpa_judul__2_-removebg-preview.png" alt="logo-pertamina" class="brand-mark">
+            <p>Pertamina</p>
+        </div>
+        <div class="workspace-label">WORKSPACE</div>
+
+        <nav>
+            {% if current_user.role == 'USER' %}
+            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+                href="{{ url_for('dashboard') }}">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            {% if current_user.role == 'PIC' %}
+            <a href="{{ url_for('data_kontrak') }}"
+                class="nav-link {% if request.endpoint == 'data_kontrak' %}active{% endif %}">
+                <i data-lucide="files"></i>
+                <span>Data Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'tambah_kontrak' %}active{% endif %}"
+                href="{{ url_for('tambah_kontrak') }}">
+                <i data-lucide="file-text"></i>
+                <span>Form Input Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'checklist_kontrak' %}active{% endif %}"
+                href="{{ url_for('checklist_kontrak') }}">
+                <i data-lucide="calendar-days"></i>
+                <span>Checklist Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            <!-- Khusus Admin -->
+            {% if current_user.role == 'ADMIN' %}
+            <a class="nav-link {% if request.endpoint == 'index_pengguna' %}active{% endif %}"
+                href=" {{ url_for('index_pengguna') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Manajemen Pengguna</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+        </nav>
+        <div class="sidebar-bottom">
+            <form action="{{ url_for('logout') }}" method="POST">
+                <button type="button" id="logoutButton" class="nav-link logout-link">
+                    <i data-lucide="log-out"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+            <div class="profile">
+                <div class="avatar">{{ (current_user.nama_lengkap or current_user.username or 'U')[0]|upper }}</div>
+                <div><strong>{{ current_user.nama_lengkap or current_user.username }}</strong><small>{{
+                        current_user.role }}</small></div><i data-lucide="more-horizontal"></i>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-title">
+                <h1>Flowchart</h1>
+                <p>Contract Control Center</p>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="date-chip">
+                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    <time id="current-date"></time>
+                </div>
+            </div>
+        </header>
+
+        <section class="page-heading" id="overview">
+            <div>
+                <h1>Flow Chart Monitoring Kontrak Zona 1</h1>
+                <p class="subtitle">Alur kerja mulai dari registrasi kontrak sampai proses pengadaan dan pembaruan
+                    realisasi</p>
+            </div>
+            <span
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold">
+                <i data-lucide="git-branch" class="w-3.5 h-3.5"></i>
+                <span>ALUR UTAMA</span>
+            </span>
+        </section>
+
+        <!-- ================= CANVAS CANVAS UTAMA (CARD PUTIH BESAR) ================= -->
+        <div class="bg-white rounded-3xl border border-slate-200 p-6 md:p-10 shadow-sm relative space-y-4">
+
+            <!-- LEGEND (KANAN ATAS) -->
+            <div class="flex items-center justify-end gap-5 text-[11px] text-slate-500 mb-6">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-teal-600"></span>
+                    <span>Proses utama</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
+                    <span>Review / persetujuan</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-sm bg-sky-600"></span>
+                    <span>Aktivitas sistem</span>
+                </div>
+            </div>
+
+            <!-- 1. MULAI -->
+            <div class="flex justify-center">
+                <div class="w-full max-w-sm rounded-2xl border border-teal-200 bg-teal-50/40 p-4 text-center shadow-xs">
+                    <span class="text-[10px] font-bold tracking-widest text-teal-700 uppercase block mb-1">MULAI</span>
+                    <h3 class="text-base font-bold text-slate-900">Input Data Kontrak</h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Judul, lokasi, WP&B, nilai OE, target, dan PIC</p>
+                </div>
+            </div>
+
+            <!-- CONNECTOR -->
+            <div class="flex justify-center text-slate-300">
+                <i data-lucide="arrow-down" class="w-4 h-4"></i>
+            </div>
+
+            <!-- 2. STEP 01 - PERSIAPAN DOKUMEN -->
+            <div
+                class="rounded-2xl border border-slate-200 bg-white p-4 flex flex-col lg:flex-row items-stretch lg:items-center gap-4 shadow-xs">
+                <div class="flex items-center gap-3 lg:w-56 shrink-0">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-teal-700 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                        01
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm leading-tight">Persiapan Dokumen</h4>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Contract Owner / Fungsi IT</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 flex-1">
+                    <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex items-start gap-2.5">
+                        <i data-lucide="file-text" class="w-4 h-4 text-teal-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-800">PR & Memo</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Create SAP dan P-Office</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex items-start gap-2.5">
+                        <i data-lucide="badge-dollar-sign" class="w-4 h-4 text-teal-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-800">HPS / OE</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">A.02 dan ≥2 referensi</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex items-start gap-2.5">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-teal-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-800">CSMS / HSE</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Matriks risiko & Lampiran H</p>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex items-start gap-2.5">
+                        <i data-lucide="clipboard-list" class="w-4 h-4 text-teal-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-xs font-semibold text-slate-800">Dokumen Tender</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Kriteria, RKS & lampiran</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONNECTOR -->
+            <div class="flex justify-center text-slate-300">
+                <i data-lucide="arrow-down" class="w-4 h-4"></i>
+            </div>
+
+            <!-- 3. KEPUTUSAN 1 & KEPUTUSAN 2 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- KEPUTUSAN 1 -->
+                <div class="rounded-2xl border border-amber-200 bg-amber-50/30 p-4 relative">
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                            <i data-lucide="git-fork" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="text-[10px] font-bold tracking-widest text-amber-700 uppercase block">KEPUTUSAN
+                                1</span>
+                            <h4 class="font-bold text-slate-900 text-xs mt-0.5">Nilai jasa lainnya > Rp5 miliar?</h4>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-4 pt-3 border-t border-amber-100/60 text-[11px]">
+                        <div class="flex items-center gap-1.5 font-semibold text-amber-700">
+                            <span>YA &rarr;</span>
+                            <span class="font-normal text-slate-500">Form A.08 + Proclist</span>
+                        </div>
+                        <div class="font-semibold text-slate-400">
+                            <span>TIDAK &darr;</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KEPUTUSAN 2 -->
+                <div class="rounded-2xl border border-amber-200 bg-amber-50/30 p-4 relative">
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                            <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <span class="text-[10px] font-bold tracking-widest text-amber-700 uppercase block">KEPUTUSAN
+                                2</span>
+                            <h4 class="font-bold text-slate-900 text-xs mt-0.5">Risiko tinggi / menengah?</h4>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-4 pt-3 border-t border-amber-100/60 text-[11px]">
+                        <div class="flex items-center gap-1.5 font-semibold text-amber-700">
+                            <span>YA &rarr;</span>
+                            <span class="font-normal text-slate-500">Lengkapi HSE Plan</span>
+                        </div>
+                        <div class="font-semibold text-slate-400">
+                            <span>TIDAK &darr;</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- CONNECTOR -->
+            <div class="flex justify-center text-slate-300">
+                <i data-lucide="arrow-down" class="w-4 h-4"></i>
+            </div>
+
+            <!-- 4. STEP 02 - REVIEW & ROUTING -->
+            <div
+                class="rounded-2xl border border-amber-200 bg-amber-50/20 p-4 flex flex-col lg:flex-row items-stretch lg:items-center gap-4 shadow-xs">
+                <div class="flex items-center gap-3 lg:w-56 shrink-0">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                        02
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm leading-tight">Review & Routing Persetujuan</h4>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Pejabat Berwenang + HHSE</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 flex-1">
+                    <div class="rounded-xl border border-amber-100 bg-white p-2.5 flex items-center gap-2">
+                        <span
+                            class="w-4 h-4 rounded bg-amber-100 text-amber-700 font-bold text-[10px] flex items-center justify-center shrink-0">1</span>
+                        <span class="text-[11px] text-slate-700 font-medium truncate">Justifikasi & RKS/KAK</span>
+                    </div>
+                    <div class="rounded-xl border border-amber-100 bg-white p-2.5 flex items-center gap-2">
+                        <span
+                            class="w-4 h-4 rounded bg-amber-100 text-amber-700 font-bold text-[10px] flex items-center justify-center shrink-0">2</span>
+                        <span class="text-[11px] text-slate-700 font-medium truncate">Form A.02 & HPS/OE</span>
+                    </div>
+                    <div class="rounded-xl border border-amber-100 bg-white p-2.5 flex items-center gap-2">
+                        <span
+                            class="w-4 h-4 rounded bg-amber-100 text-amber-700 font-bold text-[10px] flex items-center justify-center shrink-0">3</span>
+                        <span class="text-[11px] text-slate-700 font-medium truncate">PR & Kriteria Teknis</span>
+                    </div>
+                    <div class="rounded-xl border border-amber-100 bg-white p-2.5 flex items-center gap-2">
+                        <span
+                            class="w-4 h-4 rounded bg-amber-100 text-amber-700 font-bold text-[10px] flex items-center justify-center shrink-0">4</span>
+                        <span class="text-[11px] text-slate-700 font-medium truncate">Pakta Integritas</span>
+                    </div>
+                    <div class="rounded-xl border border-amber-100 bg-white p-2.5 flex items-center gap-2">
+                        <span
+                            class="w-4 h-4 rounded bg-amber-100 text-amber-700 font-bold text-[10px] flex items-center justify-center shrink-0">5</span>
+                        <span class="text-[11px] text-slate-700 font-medium truncate">A.08 & Lampiran H</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONNECTOR -->
+            <div class="flex justify-center text-slate-300">
+                <i data-lucide="arrow-down" class="w-4 h-4"></i>
+            </div>
+
+            <!-- 5. KELENGKAPAN & TANDA TANGAN -->
+            <div class="flex justify-center">
+                <div
+                    class="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="git-pull-request" class="w-4 h-4 text-slate-500"></i>
+                        <span class="text-xs font-bold text-slate-800">Kelengkapan & tanda tangan sesuai?</span>
+                    </div>
+
+                    <div class="flex items-center gap-4 text-[11px]">
+                        <div class="flex items-center gap-1.5">
+                            <span
+                                class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 font-bold border border-rose-200">BELUM</span>
+                            <span class="text-slate-400">Kembali lengkapi dokumen</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span
+                                class="px-2 py-0.5 rounded-md bg-teal-50 text-teal-700 font-bold border border-teal-200">SUDAH</span>
+                            <span class="text-slate-400">Lanjut submit</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONNECTOR -->
+            <div class="flex justify-center text-slate-300">
+                <i data-lucide="arrow-down" class="w-4 h-4"></i>
+            </div>
+
+            <!-- 6. AKTIVITAS SISTEM (STEP 03 - 05 HORIZONTAL) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+
+                <!-- Upload SmartGEP -->
+                <div class="rounded-2xl border border-sky-100 bg-sky-50/40 p-3.5 flex items-center gap-3">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                        <i data-lucide="cloud-upload" class="w-4 h-4"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h5 class="text-xs font-bold text-slate-900">Upload SmartGEP</h5>
+                        <p class="text-[10px] text-sky-700 truncate mt-0.5">Add Team Member IT & SCM</p>
+                    </div>
+                </div>
+
+                <!-- Proses Pengadaan -->
+                <div class="rounded-2xl border border-sky-100 bg-sky-50/40 p-3.5 flex items-center gap-3">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                        <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h5 class="text-xs font-bold text-slate-900">Proses Pengadaan</h5>
+                        <p class="text-[10px] text-sky-700 truncate mt-0.5">SCM / Tender</p>
+                    </div>
+                </div>
+
+                <!-- Update Status -->
+                <div class="rounded-2xl border border-sky-100 bg-sky-50/40 p-3.5 flex items-center gap-3">
+                    <div
+                        class="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                        <i data-lucide="target" class="w-4 h-4"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h5 class="text-xs font-bold text-slate-900">Update Status</h5>
+                        <p class="text-[10px] text-sky-700 truncate mt-0.5">Monitoring target realisasi</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- CONNECTOR -->
+            <div class="flex justify-center text-slate-300">
+                <i data-lucide="arrow-down" class="w-4 h-4"></i>
+            </div>
+
+            <!-- 7. SELESAI -->
+            <div class="flex justify-center pt-2">
+                <div
+                    class="rounded-full bg-teal-600 hover:bg-teal-700 text-white px-8 py-3 flex items-center gap-3 shadow-md transition-all">
+                    <i data-lucide="check-circle-2" class="w-5 h-5 text-teal-200"></i>
+                    <div class="text-left leading-tight">
+                        <span class="text-[9px] font-bold tracking-widest uppercase text-teal-200 block">SELESAI</span>
+                        <span class="text-xs font-bold">Kontrak Terealisasi</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= FOOTER FOOTNOTES (3 CARDS BAWAH) ================= -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+
+            <!-- Card 01 -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
+                <span class="text-[11px] font-bold text-teal-600 block mb-1">01</span>
+                <h5 class="text-xs font-bold text-slate-800">Batas Nilai</h5>
+                <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Form A.08 dan Proclist digunakan untuk
+                    pekerjaan Jasa Lainnya di atas Rp5 miliar.</p>
+            </div>
+
+            <!-- Card 02 -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
+                <span class="text-[11px] font-bold text-teal-600 block mb-1">02</span>
+                <h5 class="text-xs font-bold text-slate-800">Kesiapan HSE</h5>
+                <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Lampiran B2 harus menyelaraskan personel,
+                    APD, dan MCU dengan persyaratan Lampiran H.</p>
+            </div>
+
+            <!-- Card 03 -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
+                <span class="text-[11px] font-bold text-teal-600 block mb-1">03</span>
+                <h5 class="text-xs font-bold text-slate-800">STC / Eksepsi</h5>
+                <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">Apabila tidak ada STC, Lampiran A.1 digunakan
+                    untuk mencatat eksepsi apabila diperlukan.</p>
+            </div>
+
+        </div>
+
+
+
+    </main>
+
+    <!-- ================= LOGOUT CONFIRMATION ================= -->
+    <div id="logoutModal"
+        class="hidden fixed inset-0 z-[100] items-center justify-center p-6 bg-slate-950/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
+            <div class="flex items-start gap-3">
+                <div
+                    class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-900">Konfirmasi Logout</h2>
+                    <p class="text-sm text-slate-500 mt-1">Apakah Anda ingin logout?</p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" id="cancelLogout"
+                    class="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition">Tidak</button>
+
+                <form action="{{ url_for('logout') }}" method="POST" class="flex-1">
+                    <button type="submit" id="confirmLogout"
+                        class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold text-center transition">
+                        Ya
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        document.getElementById("current-date").textContent =
+            new Intl.DateTimeFormat("id-ID", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+            }).format(new Date());
+
+        lucide.createIcons();
+    </script>
+    <script src="{{ url_for('static', filename='logout.js') }}"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+
+</html>

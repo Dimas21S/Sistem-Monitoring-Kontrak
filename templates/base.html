@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kontrak | Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <aside class="sidebar">
+        <!-- <div class="brand"><span class="brand-mark">K</span><span>kontrak<span class="brand-dot">.</span></span></div> -->
+        <div class="brand" style="background: transparent;"><img
+                src="/static/image/Desain_tanpa_judul__2_-removebg-preview.png" alt="logo-pertamina" class="brand-mark">
+            <p>Pertamina</p>
+        </div>
+        <div class="workspace-label">WORKSPACE</div>
+
+        <nav>
+            {% if current_user.role == 'USER' %}
+            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+                href="{{ url_for('dashboard') }}">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            {% if current_user.role == 'PIC' %}
+            <a class="nav-link {% if request.endpoint == 'form_inputan' %}active{% endif %}"
+                href="{{ url_for('form_inputan') }}">
+                <i data-lucide="file-text"></i>
+                <span>Form Input Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'checklist_kontrak' %}active{% endif %}"
+                href="{{ url_for('checklist_kontrak') }}">
+                <i data-lucide="calendar-days"></i>
+                <span>Checklist Kontrak</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            <!-- Khusus Admin -->
+            {% if current_user.role == 'ADMIN' %}
+            <a class="nav-link {% if request.endpoint == 'index_pengguna' %}active{% endif %}"
+                href=" {{ url_for('index_pengguna') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Manajemen Pengguna</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+        </nav>
+        <div class="sidebar-bottom">
+            <form action="{{ url_for('logout') }}" method="POST">
+                <button type="submit" class="nav-link logout-link">
+                    <i data-lucide="log-out"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+            <div class="profile">
+                <div class="avatar">{{ (current_user.nama_lengkap or current_user.username or 'U')[0]|upper }}</div>
+                <div><strong>{{ current_user.nama_lengkap or current_user.username }}</strong><small>{{
+                        current_user.role }}</small></div><i data-lucide="more-horizontal"></i>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="topbar-title">
+                <h1>Dashboard</h1>
+                <p>Contract Control Center</p>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="date-chip">
+                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    <time id="current-date"></time>
+                </div>
+            </div>
+        </header>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='update-status.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script>
+        const lokasiLabels = {{ lokasi_labels | tojson }};
+        const lokasiCounts = {{ lokasi_counts | tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='bar-chart.js') }}"></script>
+    <script src="{{ url_for('static', filename='search-filter.js') }}"></script>
+    <script>
+        document.getElementById("current-date").textContent =
+            new Intl.DateTimeFormat("id-ID", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+            }).format(new Date());
+
+        lucide.createIcons();
+    </script>
+    <script>
+        async function applyGlobalFilter() {
+
+            const tahun = document.getElementById("filterTahun").value;
+            const lokasi = document.getElementById("filterLokasi").value;
+            const status = document.getElementById("filterStatus").value;
+            const pic = document.getElementById("filterPIC").value;
+
+            const params = new URLSearchParams();
+
+            if (tahun) params.append("tahun", tahun);
+            if (lokasi) params.append("lokasi", lokasi);
+            if (status) params.append("status", status);
+            if (pic) params.append("pic", pic);
+
+            try {
+
+                const response = await fetch(
+                    `/api/dashboard?${params.toString()}`
+                );
+
+                if (!response.ok) {
+                    throw new Error("Gagal mengambil data dashboard");
+                }
+
+                const data = await response.json();
+
+                console.log("DATA DASHBOARD:", data);
+
+                updateDashboard(data);
+
+            } catch (error) {
+
+                console.error("Filter dashboard error:", error);
+
+                alert("Gagal memuat data dashboard.");
+            }
+        }
+
+
+        // Tombol Terapkan
+        const btnApplyFilter = document.getElementById("btnApplyFilter");
+        if (btnApplyFilter) {
+            btnApplyFilter.addEventListener(
+                "click",
+                applyGlobalFilter
+            );
+        }
+
+
+        // Tombol Reset
+        const btnResetFilter = document.getElementById("btnResetFilter");
+        if (btnResetFilter) {
+
+            btnResetFilter.addEventListener("click", () => {
+
+                document.getElementById("filterTahun").value = "";
+                document.getElementById("filterLokasi").value = "";
+                document.getElementById("filterStatus").value = "";
+                document.getElementById("filterPIC").value = "";
+
+                applyGlobalFilter();
+            });
+        }
+
+        function updateDashboard(data) {
+            console.log("updateDashboard dipanggil:", data);
+
+            // KPI
+            const kpiTotal = document.getElementById("kpiTotal");
+            const kpiTahunIni = document.getElementById("kpiTahunIni");
+            const kpiFollowUp = document.getElementById("kpiFollowUp");
+            const kpiProgress = document.getElementById("kpiProgress");
+            const kpiAnggaran = document.getElementById("kpiAnggaran");
+
+            if (kpiTotal) {
+                kpiTotal.textContent = data.summary.total;
+            }
+
+            if (kpiTahunIni) {
+                kpiTahunIni.textContent =
+                    data.summary.kontrak_tahun_ini;
+            }
+
+            if (kpiFollowUp) {
+                kpiFollowUp.textContent =
+                    data.summary.follow_up_count;
+            }
+
+            if (kpiProgress) {
+                kpiProgress.textContent =
+                    `${data.avg_progress}%`;
+            }
+
+            if (kpiAnggaran) {
+                kpiAnggaran.textContent =
+                    "Rp" +
+                    Number(data.summary.value || 0)
+                        .toLocaleString("id-ID");
+            }
+
+            console.log("KPI berhasil diperbarui");
+        }
+    </script>
+</body>
+
+</html>

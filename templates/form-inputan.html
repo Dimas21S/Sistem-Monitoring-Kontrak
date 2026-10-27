@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Form Input Kontrak | Monitoring Kontrak</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='new_style.css') }}">
+    <style>
+        body {
+            background: #f8fafc;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <div class="brand" style="background: transparent;"><img
+                src="/static/image/Desain_tanpa_judul__2_-removebg-preview.png" alt="logo-pertamina" class="brand-mark">
+            <p>Pertamina</p>
+        </div>
+        <div class="workspace-label">WORKSPACE</div>
+
+        <nav>
+            {% if current_user.role == 'USER' %}
+            <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"
+                href="{{ url_for('dashboard') }}">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            {% if current_user.role == 'PIC' %}
+            <a href="{{ url_for('data_kontrak') }}"
+                class="nav-link {% if request.endpoint == 'data_kontrak' %}active{% endif %}">
+                <i data-lucide="files"></i>
+                <span>Data Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'tambah_kontrak' %}active{% endif %}"
+                href="{{ url_for('tambah_kontrak') }}">
+                <i data-lucide="file-text"></i>
+                <span>Form Input Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'checklist_kontrak' %}active{% endif %}"
+                href="{{ url_for('checklist_kontrak') }}">
+                <i data-lucide="calendar-days"></i>
+                <span>Checklist Kontrak</span>
+            </a>
+
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+
+            <!-- Khusus Admin -->
+            {% if current_user.role == 'ADMIN' %}
+            <a class="nav-link {% if request.endpoint == 'index_pengguna' %}active{% endif %}"
+                href=" {{ url_for('index_pengguna') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Manajemen Pengguna</span>
+            </a>
+            <a class="nav-link {% if request.endpoint == 'flowchart' %}active{% endif %}"
+                href="{{ url_for('flowchart') }}">
+                <i data-lucide="chart-no-axes-combined"></i>
+                <span>Flowchart</span>
+            </a>
+            {% endif %}
+        </nav>
+        <div class="sidebar-bottom">
+            <form action="{{ url_for('logout') }}" method="POST">
+                <button type="button" id="logoutButton" class="nav-link logout-link">
+                    <i data-lucide="log-out"></i>
+                    <span>Logout</span>
+                </button>
+            </form>
+            <div class="profile">
+                <div class="avatar">{{ (current_user.nama_lengkap or current_user.username or 'U')[0]|upper }}</div>
+                <div><strong>{{ current_user.nama_lengkap or current_user.username }}</strong><small>{{
+                        current_user.role }}</small></div><i data-lucide="more-horizontal"></i>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content ">
+        <header class="topbar">
+            <div class="topbar-title">
+                <h1>Input Data Kontrak Baru</h1>
+                <p>Contract Control Center</p>
+            </div>
+
+            <div class="topbar-actions">
+                <div class="date-chip">
+                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    <time id="current-date"></time>
+                </div>
+            </div>
+        </header>
+
+        <section class="page-heading" id="overview">
+            <div>
+                <h1>Input Data Kontrak Baru</h1>
+                <p class="subtitle">Isi informasi utama sebagai dasar dashboard dan checklist pekerjaan kontrak.</p>
+            </div>
+        </section>
+
+        <div class="min-h-screen bg-slate-100 p-[18px]">
+
+            <!-- Container Utama -->
+            <div class="flex min-h-[580px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <aside
+                    class="flex w-[280px] shrink-0 flex-col justify-between bg-gradient-to-b from-slate-900 to-teal-900 p-7 text-white">
+
+                    <div>
+
+                        <!-- Icon -->
+                        <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                            <i data-lucide="file-plus-2" class="h-5 w-5"></i>
+                        </div>
+
+                        <!-- Label -->
+                        <p class="mb-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-300">
+                            LANGKAH 01
+                        </p>
+
+                        <!-- Judul -->
+                        <h2 class="text-lg font-bold">
+                            Informasi Dasar Kontrak
+                        </h2>
+
+                        <!-- Deskripsi -->
+                        <p class="mt-2 text-sm leading-5 text-slate-300">
+                            Data ini akan menjadi identitas utama kontrak dan tampil pada dashboard monitoring.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Kontrol Data -->
+                    <div class="rounded-xl bg-white/10 p-4">
+
+                        <div class="flex gap-3">
+
+                            <i data-lucide="shield-check" class="mt-0.5 h-4 w-4 shrink-0"></i>
+
+                            <div>
+                                <p class="text-xs font-semibold">
+                                    Kontrol data
+                                </p>
+
+                                <p class="mt-1 text-[11px] leading-4 text-slate-300">
+                                    Pastikan nilai OE sudah sesuai DoA sebelum proses routing.
+                                </p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </aside>
+
+                <main class="min-w-0 flex-1 bg-white">
+
+                    <div class="flex h-full flex-col p-7">
+
+                        <form action="{{ url_for('tambah_kontrak') }}" method="POST" id="contractForm"
+                            class="flex h-full flex-col">
+
+                            <!-- =========================
+                         FORM GRID
+                    ========================== -->
+                            <div class="grid grid-cols-1 gap-x-4 gap-y-4 md:grid-cols-2">
+
+                                <!-- Judul Kontrak -->
+                                <div class="md:col-span-2">
+
+                                    <label for="f-judul"
+                                        class="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-600">
+                                        Judul Kontrak
+                                        <span class="text-slate-700">*</span>
+                                    </label>
+
+                                    <input type="text" id="f-judul" name="judul_kontrak"
+                                        placeholder="Contoh: Maintenance Infrastruktur Fiber Optic Zona 1" required
+                                        class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+
+                                </div>
+
+
+                                <!-- Lokasi Kontrak -->
+                                <div class="md:col-span-2">
+
+                                    <label for="f-lokasi"
+                                        class="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-600">
+                                        <i data-lucide="map-pin" class="h-3.5 w-3.5"></i>
+                                        Lokasi Kontrak
+                                        <span class="text-slate-700">*</span>
+                                    </label>
+
+                                    <input type="text" id="f-lokasi" name="lokasi_kontrak"
+                                        placeholder="Contoh: Jambi, Rantau, Lirik, Pangkalan Susu" required
+                                        class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+
+                                </div>
+
+
+                                <!-- Anggaran WP&B -->
+                                <div>
+
+                                    <label for="f-anggaran"
+                                        class="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-600">
+                                        <i data-lucide="wallet" class="h-3.5 w-3.5"></i>
+                                        Anggaran WP&B
+                                        <span>*</span>
+                                    </label>
+
+                                    <div
+                                        class="flex h-10 overflow-hidden rounded-md border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+
+                                        <span class="flex items-center bg-slate-50 px-3 text-sm text-slate-500">
+                                            Rp
+                                        </span>
+
+                                        <input type="number" id="f-anggaran" name="anggaran" min="0" step="0.01"
+                                            placeholder="0" required
+                                            class="min-w-0 flex-1 border-0 px-3 text-sm text-slate-700 outline-none">
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- Tahun WP&B -->
+                                <div>
+
+                                    <label for="f-tahun"
+                                        class="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-600">
+                                        <i data-lucide="calendar" class="h-3.5 w-3.5"></i>
+                                        Tahun WP&B
+                                        <span>*</span>
+                                    </label>
+
+                                    <select id="f-tahun" name="tahun_wpb" required
+                                        class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        <option value="">-- Pilih Tahun --</option>
+                                        <option value="2024">2024</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2026">2026</option>
+                                        <option value="2027">2027</option>
+                                        <option value="2028">2028</option>
+                                    </select>
+
+                                </div>
+
+
+                                <!-- Owner Estimate -->
+                                <div>
+
+                                    <label for="f-oe"
+                                        class="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-600">
+                                        <i data-lucide="wallet" class="h-3.5 w-3.5"></i>
+                                        Nilai Owner Estimate (OE)
+                                        <span>*</span>
+                                    </label>
+
+                                    <div
+                                        class="flex h-10 overflow-hidden rounded-md border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+
+                                        <span class="flex items-center bg-slate-50 px-3 text-sm text-slate-500">
+                                            Rp
+                                        </span>
+
+                                        <input type="number" id="f-oe" name="nilai" min="0" step="0.01" placeholder="0"
+                                            required
+                                            class="min-w-0 flex-1 border-0 px-3 text-sm text-slate-700 outline-none">
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- Target Realisasi -->
+                                <div>
+
+                                    <label for="f-target"
+                                        class="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-600">
+                                        <i data-lucide="flag" class="h-3.5 w-3.5"></i>
+                                        Target Realisasi
+                                        <span>*</span>
+                                    </label>
+
+                                    <input type="date" id="f-target" name="target_realisasi" required
+                                        class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+
+                                </div>
+
+
+                                <!-- PIC Kontrak -->
+                                <div>
+                                    <label for="pic" class="block text-sm font-medium mb-1">
+                                        PIC
+                                    </label>
+
+                                    <select name="pic" id="pic" class="w-full border rounded-lg px-3 py-2" required>
+                                        <option value="">Pilih PIC</option>
+
+                                        {% for user in daftar_pic %}
+                                        <option value="{{ user.id }}">
+                                            {{ user.nama_lengkap }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+
+                                <!-- Status -->
+                                <div>
+
+                                    <label for="f-status"
+                                        class="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.12em] text-slate-600">
+                                        <i data-lucide="trending-up" class="h-3.5 w-3.5"></i>
+                                        Update Status
+                                        <span>*</span>
+                                    </label>
+
+                                    <select id="f-status" name="status" required
+                                        class="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        <option value="">-- Pilih Status --</option>
+                                        <option value="Persiapan Dokumen">Persiapan Dokumen</option>
+                                        <option value="Routing & Persetujuan">Routing & Persetujuan</option>
+                                        <option value="Submit SmartGEP">Submit SmartGEP</option>
+                                        <option value="Siap Proses Tender">Siap Proses Tender</option>
+                                    </select>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =========================
+                         FOOTER FORM
+                    ========================== -->
+                            <div class="mt-auto border-t border-slate-200 pt-4">
+
+                                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                                    <!-- Note -->
+                                    <div class="flex items-center gap-2 text-xs text-slate-500">
+
+                                        <i data-lucide="alert-circle" class="h-4 w-4 shrink-0"></i>
+
+                                        <span>
+                                            Data akan tersimpan otomatis di perangkat ini.
+                                        </span>
+
+                                    </div>
+
+
+                                    <!-- Buttons -->
+                                    <div class="flex items-center justify-end gap-2">
+
+                                        <button id="delete-contract" type="button" hidden
+                                            class="inline-flex h-10 items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 text-sm font-medium text-red-600 transition hover:bg-red-100">
+                                            <i data-lucide="trash-2" class="h-4 w-4"></i>
+                                            Hapus
+                                        </button>
+
+
+                                        <button id="reset-draft" type="reset"
+                                            class="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-50">
+                                            <i data-lucide="rotate-ccw" class="h-4 w-4"></i>
+                                            Reset
+                                        </button>
+
+
+                                        <button id="save-contract" type="submit"
+                                            class="inline-flex h-10 items-center gap-2 rounded-md bg-blue-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                                            <i data-lucide="save" class="h-4 w-4"></i>
+                                            Simpan Kontrak
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </main>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ================= LOGOUT CONFIRMATION ================= -->
+    <div id="logoutModal"
+        class="hidden fixed inset-0 z-[100] items-center justify-center p-6 bg-slate-950/40 backdrop-blur-sm">
+        <div class="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 p-6">
+            <div class="flex items-start gap-3">
+                <div
+                    class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-900">Konfirmasi Logout</h2>
+                    <p class="text-sm text-slate-500 mt-1">Apakah Anda ingin logout?</p>
+                </div>
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button type="button" id="cancelLogout"
+                    class="flex-1 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold transition">Tidak</button>
+
+                <form action="{{ url_for('logout') }}" method="POST" class="flex-1">
+                    <button type="submit" id="confirmLogout"
+                        class="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold text-center transition">
+                        Ya
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='logout.js') }}"></script>
+    <script>
+        document.getElementById("current-date").textContent =
+            new Intl.DateTimeFormat("id-ID", {
+                weekday: "long",
+                day: "2-digit",
+                month: "long",
+                year: "numeric"
+            }).format(new Date());
+
+        lucide.createIcons();
+    </script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>
